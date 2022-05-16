@@ -1,1756 +1,1422 @@
 [
-    {
+  {
       "inputs": [],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "giftRecipient",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "piggyBankId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amountBNB",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "trufflesBought",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "lockForNumberOfWeeks",
-          "type": "uint256"
-        }
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+          },
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "giftRecipient",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountBNB",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "trufflesBought",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "lockForNumberOfWeeks",
+              "type": "uint256"
+          }
       ],
       "name": "GiftedTruffles",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "previousOwner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+          },
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+          }
       ],
       "name": "OwnershipTransferred",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "piggyBankId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "referee",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "trufflesUsed",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "marketTruffles",
-          "type": "uint256"
-        }
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "address",
+              "name": "referee",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "trufflesUsed",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "marketTruffles",
+              "type": "uint256"
+          }
       ],
       "name": "PigletsFed",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "pid",
-          "type": "uint256"
-        }
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "minWeeks",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "maxWeeks",
+              "type": "uint256"
+          }
       ],
-      "name": "SetDogsPId",
+      "name": "SetMinMaxLockWeeks",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "masterChefAddress",
-          "type": "address"
-        }
-      ],
-      "name": "SetMasterChefAddress",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "multiplier",
-          "type": "uint256"
-        }
-      ],
-      "name": "SetMaxPayoutMultiplier",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "value",
-          "type": "bool"
-        }
-      ],
-      "name": "SetPaused",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tier1",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tier2",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tier3",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tier4",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tier5",
-          "type": "uint256"
-        }
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tier1",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tier2",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tier3",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tier4",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tier5",
+              "type": "uint256"
+          }
       ],
       "name": "SetReferralPercentTiers",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "rewardsVaultAddress",
-          "type": "address"
-        }
-      ],
-      "name": "SetRewardsVaultAddress",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "piggyBankId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "referee",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amountBNB",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "trufflesBought",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "lockForNumberOfWeeks",
-          "type": "uint256"
-        }
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "address",
+              "name": "referee",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountBNB",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "trufflesBought",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "lockForNumberOfWeeks",
+              "type": "uint256"
+          }
       ],
       "name": "TrufflesBought",
       "type": "event"
-    },
-    {
+  },
+  {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "piggyBankId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "trufflesSold",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "truffleValue",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "marketTruffles",
-          "type": "uint256"
-        }
+          {
+              "indexed": true,
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "trufflesSold",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "truffleValue",
+              "type": "uint256"
+          },
+          {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "marketTruffles",
+              "type": "uint256"
+          }
       ],
       "name": "TrufflesSold",
       "type": "event"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "BUSD_ADDRESS",
+      "name": "BusdAddress",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "FOUNDER_ADDRESS_1",
+      "name": "DripVaultAddress",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "FOUNDER_ADDRESS_2",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "FOUNDER_ADDRESS_3",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "MAXIMUM_LOCKWEEKS",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "MAX_PAYOUT_MULTIPLIER",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "MINIMUM_LOCKWEEKS",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "PANCAKESWAP_ROUTER_ADDRESS",
+      "name": "MarketingAndDevelopmentAddress",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "PIG_ADDRESS",
+      "name": "PancakeSwapRouter",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "contract IUniswapV2Router01",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "PIG_BUSD_LP",
+      "name": "PancakeSwapRouterAddress",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
+      "inputs": [],
+      "name": "PigAddress",
+      "outputs": [
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+  },
+  {
+      "inputs": [],
+      "name": "PigBusdLp",
+      "outputs": [
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+  },
+  {
       "inputs": [],
       "name": "TRUFFLES_TO_FEED_1PIGLET",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "_isBlacklisted",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "internalType": "bool",
-          "name": "value",
-          "type": "bool"
-        }
-      ],
-      "name": "blacklistAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "bonusMultiplierListInitialized",
       "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "referee",
-          "type": "address"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+          },
+          {
+              "internalType": "address",
+              "name": "referee",
+              "type": "address"
+          }
       ],
       "name": "buyMoreTrufflesToAPiggyBank",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lockForNumberOfWeeks",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "referee",
-          "type": "address"
-        }
+          {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "lockForNumberOfWeeks",
+              "type": "uint256"
+          },
+          {
+              "internalType": "address",
+              "name": "referee",
+              "type": "address"
+          }
       ],
       "name": "buyTruffles",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "userAddress",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address"
+          }
       ],
       "name": "calculateReferralPercent",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "rt",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "rs",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "bs",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "rt",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "rs",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "bs",
+              "type": "uint256"
+          }
       ],
       "name": "calculateTrade",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "pure",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "truffles",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "truffles",
+              "type": "uint256"
+          }
       ],
       "name": "calculateTruffleSell",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "bnb",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "contractBalance",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "bnb",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "contractBalance",
+              "type": "uint256"
+          }
       ],
       "name": "calculateTrufflesBuy",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "bnb",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "bnb",
+              "type": "uint256"
+          }
       ],
       "name": "calculateTrufflesBuySimple",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+          }
       ],
       "name": "devFee",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "pure",
       "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "dogPId",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          },
+          {
+              "internalType": "address",
+              "name": "referee",
+              "type": "address"
+          }
       ],
       "name": "feedPiglets",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "getBalance",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "userAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getBonus",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          },
+          {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "weekNumber",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "weekNumber",
+              "type": "uint256"
+          }
       ],
       "name": "getBonusMultipliersList",
       "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
-        }
+          {
+              "internalType": "uint256[]",
+              "name": "",
+              "type": "uint256[]"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "adr",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "adr",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getDaysLeftSinceLock",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "userAddress",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address"
+          }
       ],
       "name": "getMyPiggyBanks",
       "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "ID",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bool",
-              "name": "isStakeOn",
-              "type": "bool"
-            },
-            {
-              "internalType": "uint256",
-              "name": "hatcheryPiglets",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "claimedTruffles",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lastFeeding",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lastCompounded",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "trufflesUsed",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "trufflesSold",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bool",
-              "name": "isMaxPayOut",
-              "type": "bool"
-            },
-            {
+          {
               "components": [
-                {
-                  "internalType": "uint256",
-                  "name": "duration",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "durationTimestamp",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "startLockTimestamp",
-                  "type": "uint256"
-                }
+                  {
+                      "internalType": "uint256",
+                      "name": "ID",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "bool",
+                      "name": "isStakeOn",
+                      "type": "bool"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "hatcheryPiglets",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "claimedTruffles",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "lastFeeding",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "lastCompounded",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "trufflesUsed",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "trufflesSold",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "bool",
+                      "name": "isMaxPayOut",
+                      "type": "bool"
+                  },
+                  {
+                      "components": [
+                          {
+                              "internalType": "uint256",
+                              "name": "duration",
+                              "type": "uint256"
+                          },
+                          {
+                              "internalType": "uint256",
+                              "name": "durationTimestamp",
+                              "type": "uint256"
+                          },
+                          {
+                              "internalType": "uint256",
+                              "name": "startLockTimestamp",
+                              "type": "uint256"
+                          }
+                      ],
+                      "internalType": "struct PiggyBank.PiggyLocker",
+                      "name": "truffleLocker",
+                      "type": "tuple"
+                  },
+                  {
+                      "components": [
+                          {
+                              "internalType": "bool",
+                              "name": "isExpired",
+                              "type": "bool"
+                          },
+                          {
+                              "internalType": "uint256",
+                              "name": "bonus",
+                              "type": "uint256"
+                          },
+                          {
+                              "internalType": "uint256",
+                              "name": "distributedBonus",
+                              "type": "uint256"
+                          },
+                          {
+                              "internalType": "uint256",
+                              "name": "dayLastDistributed",
+                              "type": "uint256"
+                          }
+                      ],
+                      "internalType": "struct PiggyBank.PiggyLockBonus",
+                      "name": "lockBonus",
+                      "type": "tuple"
+                  }
               ],
-              "internalType": "struct PiggyBankV2.PiggyLocker",
-              "name": "truffleLocker",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "internalType": "bool",
-                  "name": "isExpired",
-                  "type": "bool"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "bonus",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "distributedBonus",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "dayLastDistributed",
-                  "type": "uint256"
-                }
-              ],
-              "internalType": "struct PiggyBankV2.PiggyLockBonus",
-              "name": "lockBonus",
-              "type": "tuple"
-            },
-            {
-              "internalType": "uint256",
-              "name": "paddedPrecisionValue",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint8",
-              "name": "stakeType",
-              "type": "uint8"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.PiggyBankInfo[]",
-          "name": "",
-          "type": "tuple[]"
-        }
+              "internalType": "struct PiggyBank.PiggyBankInfo[]",
+              "name": "",
+              "type": "tuple[]"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getMyPiglets",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getMyTruffles",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+          }
       ],
       "name": "getReferralList",
       "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "referral",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "timestamp",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lockDuration",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.ReferralInfo[]",
-          "name": "",
-          "type": "tuple[]"
-        }
+          {
+              "components": [
+                  {
+                      "internalType": "address",
+                      "name": "referral",
+                      "type": "address"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "amount",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "timestamp",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "lockDuration",
+                      "type": "uint256"
+                  }
+              ],
+              "internalType": "struct PiggyBank.ReferralInfo[]",
+              "name": "",
+              "type": "tuple[]"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "adr",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "adr",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getTimestampLeftSinceLock",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "adr",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "adr",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getTrufflesSinceLastFeeding",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "getUserTruffles",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "giftRecipient",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lockForNumberOfWeeks",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "giftRecipient",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "lockForNumberOfWeeks",
+              "type": "uint256"
+          }
       ],
       "name": "giftTruffles",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "piggyBankId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lockForNumberOfWeeks",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "bonusTruffles",
-              "type": "uint256"
-            },
-            {
-              "internalType": "address",
-              "name": "referee",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lpAmount",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "piglets",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "trufflesBought",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "myPaddedValue",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "marketTruffles",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.ImportData",
-          "name": "userData",
-          "type": "tuple"
-        }
-      ],
-      "name": "importPiggyBankData",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "initBonusMultipliersList",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "initialized",
       "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
+          {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "isPaused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "longerPaysBetterBonusPercents",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "marketTruffles",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "masterChefAddress",
+      "name": "masterChefPigs",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "contract IMasterChefPigs",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "components": [
-            {
+          {
               "internalType": "address",
-              "name": "user",
+              "name": "",
               "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "piggyBankId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lockForNumberOfWeeks",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "bonusTruffles",
-              "type": "uint256"
-            },
-            {
-              "internalType": "address",
-              "name": "referee",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "lpAmount",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "piglets",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "trufflesBought",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "myPaddedValue",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "marketTruffles",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.ImportData[]",
-          "name": "userData",
-          "type": "tuple[]"
-        }
-      ],
-      "name": "multiImportPiggyBankData",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          }
       ],
       "name": "myPiggyBankCount",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "owner",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "pancakeSwapRouter",
-      "outputs": [
-        {
-          "internalType": "contract IUniswapV2Router01",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          },
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "name": "piggyBankInfo",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "ID",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isStakeOn",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "hatcheryPiglets",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "claimedTruffles",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lastFeeding",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lastCompounded",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "trufflesUsed",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "trufflesSold",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isMaxPayOut",
-          "type": "bool"
-        },
-        {
-          "components": [
-            {
+          {
               "internalType": "uint256",
-              "name": "duration",
+              "name": "ID",
               "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "durationTimestamp",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "startLockTimestamp",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.PiggyLocker",
-          "name": "truffleLocker",
-          "type": "tuple"
-        },
-        {
-          "components": [
-            {
+          },
+          {
               "internalType": "bool",
-              "name": "isExpired",
+              "name": "isStakeOn",
               "type": "bool"
-            },
-            {
+          },
+          {
               "internalType": "uint256",
-              "name": "bonus",
+              "name": "hatcheryPiglets",
               "type": "uint256"
-            },
-            {
+          },
+          {
               "internalType": "uint256",
-              "name": "distributedBonus",
+              "name": "claimedTruffles",
               "type": "uint256"
-            },
-            {
+          },
+          {
               "internalType": "uint256",
-              "name": "dayLastDistributed",
+              "name": "lastFeeding",
               "type": "uint256"
-            }
-          ],
-          "internalType": "struct PiggyBankV2.PiggyLockBonus",
-          "name": "lockBonus",
-          "type": "tuple"
-        },
-        {
-          "internalType": "uint256",
-          "name": "paddedPrecisionValue",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint8",
-          "name": "stakeType",
-          "type": "uint8"
-        }
+          },
+          {
+              "internalType": "uint256",
+              "name": "lastCompounded",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "trufflesUsed",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "trufflesSold",
+              "type": "uint256"
+          },
+          {
+              "internalType": "bool",
+              "name": "isMaxPayOut",
+              "type": "bool"
+          },
+          {
+              "components": [
+                  {
+                      "internalType": "uint256",
+                      "name": "duration",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "durationTimestamp",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "startLockTimestamp",
+                      "type": "uint256"
+                  }
+              ],
+              "internalType": "struct PiggyBank.PiggyLocker",
+              "name": "truffleLocker",
+              "type": "tuple"
+          },
+          {
+              "components": [
+                  {
+                      "internalType": "bool",
+                      "name": "isExpired",
+                      "type": "bool"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "bonus",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "distributedBonus",
+                      "type": "uint256"
+                  },
+                  {
+                      "internalType": "uint256",
+                      "name": "dayLastDistributed",
+                      "type": "uint256"
+                  }
+              ],
+              "internalType": "struct PiggyBank.PiggyLockBonus",
+              "name": "lockBonus",
+              "type": "tuple"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
+      "inputs": [
+          {
+              "internalType": "uint256",
+              "name": "weekNumber",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256[]",
+              "name": "_bonusMultipliersList",
+              "type": "uint256[]"
+          }
+      ],
+      "name": "pushToBonusMultipliersList",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+  },
+  {
       "inputs": [],
       "name": "refPercentTier1",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "refPercentTier2",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "refPercentTier3",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "refPercentTier4",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "refPercentTier5",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "name": "referrals",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
-      "name": "rewardsVaultAddress",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_seedAmount",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+          }
       ],
       "name": "seedMarket",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_piggyBankId",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_piggyBankId",
+              "type": "uint256"
+          }
       ],
       "name": "sellTruffles",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "weekNumber",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "_bonusMultipliersList",
-          "type": "uint256[]"
-        }
+          {
+              "internalType": "uint256",
+              "name": "weekNumber",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256[]",
+              "name": "_bonusMultipliersList",
+              "type": "uint256[]"
+          }
       ],
       "name": "setBonusMultipliersList",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_pid",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "minWeeks",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "maxWeeks",
+              "type": "uint256"
+          }
       ],
-      "name": "setDogsPId",
+      "name": "setMinMaxLockWeeks",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "_longerPaysBetterBonusPercents",
-          "type": "uint256[]"
-        }
-      ],
-      "name": "setLongerPaysBetterBonusPercents",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_masterChefAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setMasterChefAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "multiplier",
-          "type": "uint256"
-        }
-      ],
-      "name": "setMaxPayoutMultiplier",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bool",
-          "name": "value",
-          "type": "bool"
-        }
-      ],
-      "name": "setPaused",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tier1",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tier2",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tier3",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tier4",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tier5",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "tier1",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "tier2",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "tier3",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "tier4",
+              "type": "uint256"
+          },
+          {
+              "internalType": "uint256",
+              "name": "tier5",
+              "type": "uint256"
+          }
       ],
       "name": "setReferralPercentTiers",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "_rewardsVaultAddress",
-          "type": "address"
-        }
+          {
+              "internalType": "uint256",
+              "name": "_truffle",
+              "type": "uint256"
+          }
       ],
-      "name": "setRewardsVaultAddress",
+      "name": "setTruffleAmount",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_seedAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "setSeedAmount",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
+  },
+  {
       "inputs": [],
       "name": "startTime",
       "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
       ],
       "stateMutability": "view",
       "type": "function"
-    },
-    {
+  },
+  {
+      "inputs": [],
+      "name": "totalPiggyBanks",
+      "outputs": [
+          {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+          }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+  },
+  {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
+          {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+          }
       ],
       "name": "transferOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "unPausedBlockTimestamp",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    }
-  ]
+  }
+]
