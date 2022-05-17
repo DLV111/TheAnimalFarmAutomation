@@ -87,8 +87,7 @@ class PiggyBank:
         for key,item in pbinfo.items():
             # print ("%s: %s" % (key,item))
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
-            # if nextFeed <=0:
-            if nextFeed >=0:
+            if nextFeed <=0:
                 logging.info("Feeding the pigs - piggy bank number: %s" % key)
                 self.feed(key)
             else:
@@ -104,25 +103,48 @@ class PiggyBank:
         #     print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', (datetime.fromtimestamp( item[5] )) )) )
 
     def feed(self,ID):
-        tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
-            {"gasPrice": eth2wei(self.gas_price, "gwei"),
-            "from": self.address,
-            "gas": 173344,
-            "nonce": self.nonce
-        })
-        self.nonce +=1
-        print(tx)
-        # signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
-        # txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        # txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
-        # if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
-        #     logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
-        # else:
-        #     logging.info("Failed %s" % (self.w3.toHex(txn)))
+        max_tries = self.max_tries
+        retry_sleep = self.max_tries_delay
+        default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
+        remaining_retries = max_tries
+        txn_receipt = None
 
-    # def piggyBankInfo(self):
-    #     for x in range(self.piggybankCount):
-    #         self.aa.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
+        if self.perform_piggybank_actions.lower() == "true":
+            for _ in range(max_tries):
+                try:
+                    remaining_retries+=-1
+                    tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
+                        {"gasPrice": eth2wei(self.gas_price, "gwei"),
+                        "from": self.address,
+                        "gas": 173344,
+                        "nonce": self.nonce
+                    })
+                    self.nonce +=1
+                    #print(tx)
+                    signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
+                    txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                    txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
+                    if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
+                        logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
+                        #time.sleep(default_sleep_between_actions)
+                        # self.getDripBalance()
+                        # logging.info("Updated Drip balance is: %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
+                        # self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
+                        break
+                    else:
+                        logging.info("Compounding Failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
+                        #time.sleep(default_sleep_between_actions)
+                        # self.sendMessage("Compounding Failed","%s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
+                        logging.debug(txn_receipt)
+                        if remaining_retries != 0:
+                            time.sleep(retry_sleep)
+                except:
+                    logging.info(traceback.format_exc())
+                    time.sleep(default_sleep_between_actions)
+        else:
+            logging.info("Compounding is set to False, only outputting some messages")
+            #logging.info("Updated Drip balance is: %s (Increase %s)" % (self.DripBalance,self.getDripBalanceIncrease()))
+            #self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),'test:aaaabbbbccccdddd'))
 
     def piggyBankInfo(self):
         _piggyBankInfo = []
@@ -130,29 +152,11 @@ class PiggyBank:
             _piggyBankInfo.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
         return (_piggyBankInfo)
 
-    # def getPiggyBanks(self):
-    #     self.piggyBanks = self.piggy_contract.functions.getMyPiggyBanks(self.address).call()
-    #     print(self.piggyBanks[0])
-    #     print(self.piggyBanks[1])
-    #     print(self.piggyBanks[2])
-
-    def getMyPiglets(self):
-        for x in range(8):
-            print("%s - %s" % (x,self.piggy_contract.functions.getMyPiglets(x).call()))
-
     def getMyTruffles(self):
         for x in range(8):
             truffles = self.piggy_contract.functions.getMyTruffles(x).call()
             truffles_sell = wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call())
             print("%s - %s - %s" % (x,truffles,truffles_sell))
-
-    def piggy_bank_info(self):
-        return self.piggy_contract.functions.piggyBankInfo(self.address).call()
-        # self.userInfo[] = self.piggy_contract.functions.getMyPiggyBanks(self.address).call()
-        # print(self.userInfo[])
-        # self.DripBalance = round(wei2eth((self.userInfo[2])),self.rounding)
-        # if self.InitDripBalance == 0:
-            # self.InitDripBalance = self.DripBalance
 
     def validateConfig(self):
         if self.private_key == "":
@@ -269,46 +273,6 @@ class PiggyBank:
 
     def nonce(self):
         return self.w3.eth.getTransactionCount(self.address)
-
-    def compoundDrip(self):
-        max_tries = self.max_tries
-        retry_sleep = self.max_tries_delay
-        default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
-
-        remaining_retries = max_tries
-        txn_receipt = None
-        if self.perform_piggybank_actions.lower() == "true":
-            for _ in range(max_tries):
-                try:
-                    remaining_retries+=-1
-                    tx = self.piggy_contract.functions.roll().buildTransaction({
-                                        "gasPrice": eth2wei(self.gas_price, "gwei"), "nonce": self.nonce()})
-                    signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
-                    txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-                    txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
-                    if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
-                        logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
-                        time.sleep(default_sleep_between_actions)
-                        self.getDripBalance()
-                        logging.info("Updated Drip balance is: %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
-                        self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
-                        break
-                    else:
-                        logging.info("Compounding Failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
-                        self.sendMessage("Compounding Failed","%s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
-                        logging.debug(txn_receipt)
-                        if remaining_retries != 0:
-                            time.sleep(retry_sleep)
-                except:
-                    logging.info(traceback.format_exc())
-                    time.sleep(default_sleep_between_actions)
-        else:
-            logging.info("Compounding is set to False, only outputting some messages")
-            self.getDripBalance()
-            logging.info("Updated Drip balance is: %s (Increase %s)" % (self.DripBalance,self.getDripBalanceIncrease()))
-            self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),'test:aaaabbbbccccdddd'))
-
-
 
     def sendMessage(self, title_txt, body):
         if self.pushover_api_key and self.pushover_user_key:
