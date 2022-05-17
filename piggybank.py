@@ -3,6 +3,7 @@ import os
 import logging
 import sys
 import time
+from datetime import datetime
 from pushover import Client
 from utils import eth2wei, wei2eth, read_json_file, to_checksum
 from dotenv import load_dotenv
@@ -29,7 +30,6 @@ class PiggyBank:
         self.txn_timeout = txn_timeout
         self.gas_price = gas_price
         self.rpc_host = rpc_host
-        self.InitDripBalance = 0
 
         # Init the pushover client if defined
         self.PushOverClientInit()
@@ -43,56 +43,98 @@ class PiggyBank:
             to_checksum(PIGGYBANK_CONTRACT_ADDR),
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
-        self.aa = []
-
-        self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
-        logging.info("You have %s piggy banks" % self.piggybankCount)
-        self.piggyBankInfo()
-        #self.getMyPiglets()
-        #self.getMyTruffles()
-        # self.getAvailableClaims()
-        # self.getBNBbalance()
-        # self.checkAvailableBNBBalance()
-
-        print (self.aa)
-
-        for item in self.aa:
-            print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item[5]))) )
-            #now =  
-   
 
         self.nonce = self.w3.eth.getTransactionCount(self.address)
+        self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
+        logging.info("You have %s piggy banks" % self.piggybankCount)
+        #self.myPiggyBankDetails()
+#        print(self.farmerSleepTime)
+
         #self.feed(4)
         # self.feed(5)
         # self.feed(6)
         # self.feed(7)
-  
+
+    def myPiggyBankDetails(self):
+        pbinfo = self.piggyBankInfo()
+        my_piggybank = {} # This is an internal dict which contains all the info I need
+        for pb in pbinfo:
+            _nextFeeding = pb[4] + 86400
+            _timeToNextFeeding = _nextFeeding - int(time.time())
+            my_piggybank.update({
+                pb[0]: {
+                    "raw": pb,
+                    "ID": pb[0],
+                    "isStakeOn": pb[1],
+                    "hatcheryPiglets": pb[2],
+                    "claimedTruffles": pb[3],
+                    "lastFeeding": pb[4],
+                    "lastCompounded": pb[5],
+                    "trufflesUsed": pb[6],
+                    "trufflesSold": pb[7],
+                    "isMaxPayOut": pb[8],
+                    "nextFeeding": _nextFeeding,
+                    "timeToNextFeeding": _timeToNextFeeding,
+                }
+            })
+        return (my_piggybank)
+
+        #self.farmerSleepTime = self.feedOrSleep()
+
+    def feedOrSleep(self,pbinfo):
+        logging.info("Working out if I feed or sleep...")
+        _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
+        for key,item in pbinfo.items():
+            # print ("%s: %s" % (key,item))
+            nextFeed = (pbinfo[key]['timeToNextFeeding'])
+            # if nextFeed <=0:
+            if nextFeed >=0:
+                logging.info("Feeding the pigs - piggy bank number: %s" % key)
+                self.feed(key)
+            else:
+                if nextFeed < _farmerSleepTime:
+                    _farmerSleepTime = nextFeed
+
+        logging.info("I will sleep for %s" % _farmerSleepTime)
+        return(_farmerSleepTime)
+
+        # for item in self.aa:
+        #     print (item[5])
+        #     # print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item[5]))) )
+        #     print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', (datetime.fromtimestamp( item[5] )) )) )
+
     def feed(self,ID):
         tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
-            {"gasPrice": eth2wei(self.gas_price, "gwei"), 
+            {"gasPrice": eth2wei(self.gas_price, "gwei"),
             "from": self.address,
             "gas": 173344,
             "nonce": self.nonce
         })
         self.nonce +=1
-        #print(tx)
-        signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
-        txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
-        if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
-            logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
-        else:
-            logging.info("Failed %s" % (self.w3.toHex(txn)))
-      
-    def piggyBankInfo(self):
-        for x in range(self.piggybankCount):
-            self.aa.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
+        print(tx)
+        # signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
+        # txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        # txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
+        # if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
+        #     logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
+        # else:
+        #     logging.info("Failed %s" % (self.w3.toHex(txn)))
 
-    def getPiggyBanks(self):
-        self.piggyBanks = self.piggy_contract.functions.getMyPiggyBanks(self.address).call()
-        print(self.piggyBanks[0])
-        print(self.piggyBanks[1])
-        print(self.piggyBanks[2])
+    # def piggyBankInfo(self):
+    #     for x in range(self.piggybankCount):
+    #         self.aa.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
+
+    def piggyBankInfo(self):
+        _piggyBankInfo = []
+        for x in range(self.piggybankCount):
+            _piggyBankInfo.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
+        return (_piggyBankInfo)
+
+    # def getPiggyBanks(self):
+    #     self.piggyBanks = self.piggy_contract.functions.getMyPiggyBanks(self.address).call()
+    #     print(self.piggyBanks[0])
+    #     print(self.piggyBanks[1])
+    #     print(self.piggyBanks[2])
 
     def getMyPiglets(self):
         for x in range(8):
@@ -105,7 +147,7 @@ class PiggyBank:
             print("%s - %s - %s" % (x,truffles,truffles_sell))
 
     def piggy_bank_info(self):
-        return self.piggy_contract.functions.piggyBankInfo(self.address).call()        
+        return self.piggy_contract.functions.piggyBankInfo(self.address).call()
         # self.userInfo[] = self.piggy_contract.functions.getMyPiggyBanks(self.address).call()
         # print(self.userInfo[])
         # self.DripBalance = round(wei2eth((self.userInfo[2])),self.rounding)
@@ -150,7 +192,7 @@ class PiggyBank:
             self.wallet_friendly_name = config['default']['wallet_friendly_name']
             self.pushover_api_key = config['default']['pushover_api_key']
             self.pushover_user_key = config['default']['pushover_user_key']
-            # [drip]
+            # [piggybank]
             self.perform_piggybank_actions = config['piggybank']['perform_piggybank_actions']
             self.max_tries = int(config['piggybank']['max_tries'])
             self.max_tries_delay = int(config['piggybank']['max_tries_delay'])
@@ -172,7 +214,7 @@ class PiggyBank:
                 '#pushover_api_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.',
                 '#pushover_user_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.'
                 }
-            config['drip'] = {
+            config['piggybank'] = {
                 'perform_piggybank_actions': 'False  # Set to true to actually perform compounding',
                 'max_tries': '2  # Number of retries on a transaction failure - will cost gas each time. 2 means try once more if there is a failure.',
                 'max_tries_delay': '180  # Seconds between retries on a transaction failure. Wait this long before trying again.',
@@ -286,6 +328,13 @@ def main():
     logging.info('----------------')
 
     piggybank = PiggyBank()
+
+    while True:
+        pbinfo = piggybank.myPiggyBankDetails()
+        # Loop through all the returned piggy banks to either sleep or compound
+        sleep_time = piggybank.feedOrSleep(pbinfo)
+
+        time.sleep(sleep_time)
 
     # logging.info("Current Balance %s" % dripwallet.DripBalance)
     # logging.info("Available to compound %s" % dripwallet.claimsAvailable)
