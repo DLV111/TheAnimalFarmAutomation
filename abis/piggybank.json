@@ -576,11 +576,6 @@
               "internalType": "uint256",
               "name": "_piggyBankId",
               "type": "uint256"
-          },
-          {
-              "internalType": "address",
-              "name": "referee",
-              "type": "address"
           }
       ],
       "name": "feedPiglets",
@@ -810,7 +805,7 @@
       "outputs": [
           {
               "internalType": "uint256",
-              "name": "",
+              "name": "Piglets",
               "type": "uint256"
           }
       ],
