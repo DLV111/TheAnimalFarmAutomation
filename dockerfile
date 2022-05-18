@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.8
 
 WORKDIR /usr/src/app
 
@@ -9,5 +9,5 @@ RUN mkdir /config
 
 ENTRYPOINT [ "python" ]
 
-# docker build -f Dockerfile -t crypto_web3:1.0 .
+# docker build -f dockerfile -t crypto_web3:1.0 .
 # docker run -it --name af_piggybank -v /path/to/config.ini:/config/config.ini -v "$PWD":/usr/src/myapp -w /usr/src/myapp crytpo_web3:1.0 piggybank.py /config/config.ini
