@@ -6,7 +6,6 @@ import time
 from datetime import datetime
 from pushover import Client
 from utils import eth2wei, wei2eth, read_json_file, to_checksum
-from dotenv import load_dotenv
 import traceback
 import argparse
 import configparser
