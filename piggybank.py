@@ -101,7 +101,6 @@ class PiggyBank:
         #     print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', (datetime.fromtimestamp( item[5] )) )) )
 
     def feed(self,ID):
-        self.nonce = self.w3.eth.getTransactionCount(self.address)
         max_tries = self.max_tries
         retry_sleep = self.max_tries_delay
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
@@ -116,7 +115,7 @@ class PiggyBank:
                         {"gasPrice": eth2wei(self.gas_price, "gwei"),
                         "from": self.address,
                         "gas": 173344,
-                        "nonce": self.nonce
+                        "nonce": self.w3.eth.getTransactionCount(self.address)
                     })
                     #print(tx)
                     signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
@@ -268,9 +267,6 @@ class PiggyBank:
                 logging.info(msg)
                 self.sendMessage('BNB Balance issue',msg)
                 sys.exit()
-
-    def nonce(self):
-        return self.w3.eth.getTransactionCount(self.address)
 
     def sendMessage(self, title_txt, body):
         if self.pushover_api_key and self.pushover_user_key:
