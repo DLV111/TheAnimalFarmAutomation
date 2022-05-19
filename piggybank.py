@@ -43,7 +43,6 @@ class PiggyBank:
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
 
-        self.nonce = self.w3.eth.getTransactionCount(self.address)
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
         #self.myPiggyBankDetails()
@@ -102,6 +101,7 @@ class PiggyBank:
         #     print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', (datetime.fromtimestamp( item[5] )) )) )
 
     def feed(self,ID):
+        self.nonce = self.w3.eth.getTransactionCount(self.address)
         max_tries = self.max_tries
         retry_sleep = self.max_tries_delay
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
@@ -118,7 +118,6 @@ class PiggyBank:
                         "gas": 173344,
                         "nonce": self.nonce
                     })
-                    self.nonce +=1
                     #print(tx)
                     signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
                     txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
