@@ -3,6 +3,7 @@ from decimal import Decimal
 import logging
 import traceback
 import requests
+import time
 
 def wei2eth(wei, unit="ether"):
     return Web3.fromWei(wei, unit)
@@ -62,3 +63,6 @@ def binance_api_get_price(symbol, max_tries=1):
         except:
             logging.info(traceback.format_exc())
     return None
+
+def getNextFeedLocalTime(timeInEpoch):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timeInEpoch))
