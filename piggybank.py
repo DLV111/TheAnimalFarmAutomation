@@ -5,7 +5,7 @@ import sys
 import time
 from datetime import datetime
 from pushover import Client
-from utils import eth2wei, wei2eth, read_json_file, to_checksum, getNextFeedLocalTime
+from utils import eth2wei, wei2eth, read_json_file, to_checksum, getLocalTime
 import traceback
 import argparse
 import configparser
@@ -82,7 +82,7 @@ class PiggyBank:
     def feedOrSleep(self,pbinfo):
         logging.info("Working out if I feed or sleep...")
         _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
-        last_feed = ""
+        _nextFeedTime = ""
         for key,item in pbinfo.items():
             # print ("%s: %s" % (key,item))
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -92,9 +92,9 @@ class PiggyBank:
             else:
                 if nextFeed < _farmerSleepTime:
                     _farmerSleepTime = nextFeed
-                    last_feed = pbinfo[key]['lastFeeding']
+                    _nextFeedTime = pbinfo[key]['nextFeeding']
 
-        logging.info("I will sleep for %s - Next feeding is at %s" % (_farmerSleepTime, getNextFeedLocalTime(last_feed)))
+        logging.info("I will sleep for %s - Next feeding is at %s" % (_farmerSleepTime, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
         # for item in self.aa:

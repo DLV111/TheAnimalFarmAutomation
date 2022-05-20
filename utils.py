@@ -64,5 +64,5 @@ def binance_api_get_price(symbol, max_tries=1):
             logging.info(traceback.format_exc())
     return None
 
-def getNextFeedLocalTime(timeInEpoch):
+def getLocalTime(timeInEpoch):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timeInEpoch))
