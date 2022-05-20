@@ -14,7 +14,7 @@ import configparser
 PIGGYBANK_CONTRACT_ADDR = "0x1514c766127378ea9653f9f4428fe25f3fd256c3"
 
 PIGGYBANK_ABI_FILE = "./abis/piggybank.json"
-VERSION = '0.1'
+VERSION = '0.2'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -215,7 +215,7 @@ class PiggyBank:
             config = configparser.ConfigParser()
             config['default'] = {
                 'private_key': '  # Mandatory - gives write access to your wallet KEEP THIS SECRET!!',
-                'wallet_friendly_name': 'Test Drip Wallet  # Mandatory - Friendly name to display in output',
+                'wallet_friendly_name': 'Test Wallet  # Mandatory - Friendly name to display in output',
                 '#pushover_api_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.',
                 '#pushover_user_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.'
                 }
@@ -239,10 +239,10 @@ class PiggyBank:
     def argparser(self):
         import textwrap
         description = textwrap.dedent('''
-            Automatic Drip Compounding
+            Piggy Bank Compounding
 
-            You can use this script to compound drip automatically.
-            See the readme at https://github.com/DLV111/DripCompound for more details.
+            You can use this script to compound your piggy bank's every 24h
+            See the readme at https://github.com/DLV111/TheAnimalFarmAutomations for more details.
             If you like this please consider buying me a beer/coffee
         ''')
         parser = argparse.ArgumentParser(description=description,
@@ -251,10 +251,6 @@ class PiggyBank:
         parser.add_argument("config_file", help="Path to the config file")
         args = parser.parse_args()
         return(vars(args))
-
-
-    def getDripBalanceIncrease(self):
-        return (self.DripBalance - self.InitDripBalance)
 
     def getAvailableClaims(self):
         self.claimsAvailable = round(wei2eth(self.piggy_contract.functions.claimsAvailable(self.address).call()),self.rounding)
@@ -286,7 +282,7 @@ def main():
     # Setup logger.
     log_format = '%(asctime)s: %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
-    logging.info('Drip Automation v%s Started!' % VERSION)
+    logging.info('Feeding pigs automation v%s Started!' % VERSION)
     logging.info('----------------')
 
     piggybank = PiggyBank()
@@ -297,14 +293,6 @@ def main():
         sleep_time = piggybank.feedOrSleep(pbinfo)
 
         time.sleep(sleep_time)
-
-    # logging.info("Current Balance %s" % dripwallet.DripBalance)
-    # logging.info("Available to compound %s" % dripwallet.claimsAvailable)
-    # dripwallet.sendMessage("Drip Compounding","Current Balance %s - Compound %s" % (dripwallet.DripBalance,dripwallet.claimsAvailable))
-
-    # # Actually do the compound step
-    # dripwallet.compoundDrip()
-
 
 if __name__ == "__main__":
    main()
