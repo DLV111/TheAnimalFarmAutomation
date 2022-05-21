@@ -45,13 +45,6 @@ class PiggyBank:
 
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
-        #self.myPiggyBankDetails()
-#        print(self.farmerSleepTime)
-
-        #self.feed(4)
-        # self.feed(5)
-        # self.feed(6)
-        # self.feed(7)
 
     def myPiggyBankDetails(self):
         pbinfo = self.piggyBankInfo()
@@ -87,7 +80,8 @@ class PiggyBank:
             # print ("%s: %s" % (key,item))
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
             if nextFeed <=0:
-                logging.info("Feeding the pigs - piggy bank number: %s" % key)
+                _msg = "Feeding the pigs - piggy bank number: %s" % key
+                logging.info(_msg)
                 self.feed(key)
             else:
                 if nextFeed < _farmerSleepTime:
@@ -126,16 +120,20 @@ class PiggyBank:
                     txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
                     txn_receipt = self.w3.eth.waitForTransactionReceipt(txn)
                     if txn_receipt and "status" in txn_receipt and txn_receipt["status"] == 1:
-                        logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
+                        #logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
                         #time.sleep(default_sleep_between_actions)
                         # self.getDripBalance()
+                        _msg = ("Successfully fed the piggy bank %s - tx: https://bscscan.com/tx/%s" % (ID,self.w3.toHex(txn)))
+                        logging.info(_msg)
+                        self.sendMessage("Fed the piglets", _msg)
                         # logging.info("Updated Drip balance is: %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
                         # self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
                         break
                     else:
-                        logging.info("Compounding Failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
+                        _msg = "Compounding Failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn))
+                        logging.info(_msg)
                         #time.sleep(default_sleep_between_actions)
-                        # self.sendMessage("Compounding Failed","%s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn)))
+                        self.sendMessage("Compounding Failed",_msg)
                         logging.debug(txn_receipt)
                         if remaining_retries != 0:
                             time.sleep(retry_sleep)
