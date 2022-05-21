@@ -14,7 +14,7 @@ import configparser
 PIGGYBANK_CONTRACT_ADDR = "0x1514c766127378ea9653f9f4428fe25f3fd256c3"
 
 PIGGYBANK_ABI_FILE = "./abis/piggybank.json"
-VERSION = '0.2'
+VERSION = '0.3'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -130,10 +130,13 @@ class PiggyBank:
                         # self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
                         break
                     else:
-                        _msg = "Compounding Failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx %s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn))
+                        # logging.info(txn_receipt)
+                        # Example txn_recepit result
+                        # 2022-05-21 13:42:33,422: AttributeDict({'blockHash': HexBytes('0xb1b8ede639954fe2d90d3e3fe2a019479f61308c7f64da699da30c119dbec7a0'), 'blockNumber': 17984664, 'contractAddress': None, 'cumulativeGasUsed': 6610559, 'from': '0x1007aaF4b214622155dE89546486A070Eb731Dc0', 'gasUsed': 25349, 'logs': [], 'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'), 'status': 0, 'to': '0x1514c766127378Ea9653F9F4428fe25f3fD256c3', 'transactionHash': HexBytes('0xe846312c8d1b2091dc99ae616185818f7fe7bd5f143bbd4ea897c4e744f15c72'), 'transactionIndex': 72, 'type': '0x0'})
+                        _msg = "Piglet feeding failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx https://bscscan.com/tx/%s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn))
                         logging.info(_msg)
                         #time.sleep(default_sleep_between_actions)
-                        self.sendMessage("Compounding Failed",_msg)
+                        self.sendMessage("Failed piglet feeding",_msg)
                         logging.debug(txn_receipt)
                         if remaining_retries != 0:
                             time.sleep(retry_sleep)
