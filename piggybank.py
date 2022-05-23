@@ -69,24 +69,23 @@ class PiggyBank:
             writemsg = "There has been a new piggy bank added to the config. Please review and update. Default action is to compound each day"
             self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
 
-    def getMyTruffles(self):
-        for x in range(8):
-            truffles = self.piggy_contract.functions.getMyTruffles(x).call()
-            truffles_sell = wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call())
-            print("%s - %s - %s" % (x,truffles,truffles_sell))
+    def calculateTruffleSell(self,truffles):
+        print (self.piggy_contract.functions.calculateTruffleSell(truffles).call())
+        print (wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call()))
 
     def getMyTruffles(self,ID):
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
     def myPiggyBankDetails(self):
         pbinfo = self.piggyBankInfo()
-        my_piggybank = {} # This is an internal dict which contains all the info I need
+        self.my_piggybank = {} # This is an internal dict which contains all the info I need
         for pb in pbinfo:
             _ID = pb[0]
             _nextFeeding = pb[4] + 86400
             _timeToNextFeeding = _nextFeeding - int(time.time())
             currentTruffles = self.getMyTruffles(_ID)
-            my_piggybank.update({
+            # self.calculateTruffleSell(currentTruffles)
+            self.my_piggybank.update({
                 _ID: {
                     "raw": pb,
                     "ID": _ID,
@@ -103,7 +102,7 @@ class PiggyBank:
                     "currentTruffles": currentTruffles,
                 }
             })
-        return (my_piggybank)
+        return (self.my_piggybank)
 
     def getActionForToday(self,ID):
         curr_date = date.today()
@@ -124,7 +123,7 @@ class PiggyBank:
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
             if nextFeed <=0:
                 if actionForToday == "claim":
-                    _msg = "Claiming the pigs - piggy bank number: %s" % key
+                    _msg = "Claiming the pigs - piggy bank number: %s - truffles: %s" % (key,self.my_piggybank[key]['currentTruffles'])
                     logging.info (_msg)
                     self.feedOrClaim(key,action=actionForToday)
                 else:
@@ -178,16 +177,15 @@ class PiggyBank:
                         #logging.info("Transaction Successful: %s" % (self.w3.toHex(txn)))
                         #time.sleep(default_sleep_between_actions)
                         # self.getDripBalance()
-                        _msg = ("Successfully fed the piggy bank %s - tx: https://bscscan.com/tx/%s" % (ID,self.w3.toHex(txn)))
+                        if action == 'claim':
+                            _msg = ("Successfully claimed %s truffles from the piggy bank %s - tx: https://bscscan.com/tx/%s" % (self.my_piggybank[ID]['currentTruffles'],ID,self.w3.toHex(txn)))
+                        else:
+                            _msg = ("Successfully fed the piggy bank %s - tx: https://bscscan.com/tx/%s" % (ID,self.w3.toHex(txn)))
                         logging.info(_msg)
                         self.sendMessage("Fed the piglets", _msg)
-                        # logging.info("Updated Drip balance is: %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
-                        # self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),self.w3.toHex(txn)))
                         break
                     else:
-                        # logging.info(txn_receipt)
-                        # Example txn_recepit result
-                        # 2022-05-21 13:42:33,422: AttributeDict({'blockHash': HexBytes('0xb1b8ede639954fe2d90d3e3fe2a019479f61308c7f64da699da30c119dbec7a0'), 'blockNumber': 17984664, 'contractAddress': None, 'cumulativeGasUsed': 6610559, 'from': '0x1007aaF4b214622155dE89546486A070Eb731Dc0', 'gasUsed': 25349, 'logs': [], 'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'), 'status': 0, 'to': '0x1514c766127378Ea9653F9F4428fe25f3fD256c3', 'transactionHash': HexBytes('0xe846312c8d1b2091dc99ae616185818f7fe7bd5f143bbd4ea897c4e744f15c72'), 'transactionIndex': 72, 'type': '0x0'})
+                        logging.info(txn_receipt)
                         _msg = "Piglet feeding failed. %s retries remaining (%s seconds apart). Transaction status '%s' - tx https://bscscan.com/tx/%s" % (remaining_retries,retry_sleep,txn_receipt["status"],self.w3.toHex(txn))
                         logging.info(_msg)
                         #time.sleep(default_sleep_between_actions)
@@ -348,11 +346,11 @@ def main():
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
         # Loop through all the returned piggy banks to either sleep or compound
-        prettyPrint(pbinfo)
+        # prettyPrint(pbinfo)
         piggybank.updatePiggyConfigFile(pbinfo)
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-        
-        sys.exit(2)
+
+        # sys.exit(2)
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
