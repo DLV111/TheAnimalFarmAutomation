@@ -1,11 +1,13 @@
+from calendar import weekday
 from web3 import Web3
 import os
 import logging
 import sys
 import time
-from datetime import datetime
+import calendar
+from datetime import datetime, date
 from pushover import Client
-from utils import eth2wei, wei2eth, read_json_file, to_checksum, getLocalTime
+from utils import eth2wei, prettyPrint, wei2eth, read_json_file, to_checksum, getLocalTime, addNewConfigOption
 import traceback
 import argparse
 import configparser
@@ -20,9 +22,9 @@ class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
 
         self.config_args = self.argparser()
-        self.config = self.readInConfig(self.config_args)
+        self.config_file = self.config_args['config_file']
+        self.config = self.readInConfig()
         self.validateConfig()
-        self.pgdetails = {}
 
         logging.info('"%s" Selected for processing' % self.wallet_friendly_name)
         self.rounding = rounding
@@ -42,20 +44,52 @@ class PiggyBank:
             to_checksum(PIGGYBANK_CONTRACT_ADDR),
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
-
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
+
+    def updatePiggyConfigFile(self,pbinfo):
+        _parser = configparser.ConfigParser()
+        anyUpdates = False
+        config_file = self.config_args['config_file']
+        if os.path.exists(config_file):
+            _parser.read(config_file)
+        for key,item in pbinfo.items():
+            section = "piggybank_" + str(key)
+            if not _parser.has_section(section):
+                anyUpdates = True
+                day = 0
+                week = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+                while day < 6:
+                    if day == 0:
+                        _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound or claim - if unknown will compound')
+                    else:
+                        _parser = addNewConfigOption(_parser, section, week[day], 'compound')
+                    day += 1
+        if anyUpdates:
+            writemsg = "There has been a new piggy bank added to the config. Please review and update. Default action is to compound each day"
+            self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
+
+    def getMyTruffles(self):
+        for x in range(8):
+            truffles = self.piggy_contract.functions.getMyTruffles(x).call()
+            truffles_sell = wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call())
+            print("%s - %s - %s" % (x,truffles,truffles_sell))
+
+    def getMyTruffles(self,ID):
+        return self.piggy_contract.functions.getMyTruffles(ID).call()
 
     def myPiggyBankDetails(self):
         pbinfo = self.piggyBankInfo()
         my_piggybank = {} # This is an internal dict which contains all the info I need
         for pb in pbinfo:
+            _ID = pb[0]
             _nextFeeding = pb[4] + 86400
             _timeToNextFeeding = _nextFeeding - int(time.time())
+            currentTruffles = self.getMyTruffles(_ID)
             my_piggybank.update({
-                pb[0]: {
+                _ID: {
                     "raw": pb,
-                    "ID": pb[0],
+                    "ID": _ID,
                     "isStakeOn": pb[1],
                     "hatcheryPiglets": pb[2],
                     "claimedTruffles": pb[3],
@@ -66,23 +100,37 @@ class PiggyBank:
                     "isMaxPayOut": pb[8],
                     "nextFeeding": _nextFeeding,
                     "timeToNextFeeding": _timeToNextFeeding,
+                    "currentTruffles": currentTruffles,
                 }
             })
         return (my_piggybank)
 
-        #self.farmerSleepTime = self.feedOrSleep()
+    def getActionForToday(self,ID):
+        curr_date = date.today()
+        day = str(calendar.day_name[curr_date.weekday()]).lower()
+        config = self.readInConfig()
+        try:
+            return config['piggybank_' + str(ID)][day]
+        except:
+            return ('compound')
 
-    def feedOrSleep(self,pbinfo):
-        logging.info("Working out if I feed or sleep...")
+    def feedOrSleepOrClaim(self,pbinfo):
+        logging.info("Working out if I feed or claim or sleep...")
         _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
         _nextFeedTime = ""
         for key,item in pbinfo.items():
-            # print ("%s: %s" % (key,item))
+            actionForToday = self.getActionForToday(key)
+            #print ("key: %s - action: %s " % (key,actionForToday))
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
             if nextFeed <=0:
-                _msg = "Feeding the pigs - piggy bank number: %s" % key
-                logging.info(_msg)
-                self.feed(key)
+                if actionForToday == "claim":
+                    _msg = "Claiming the pigs - piggy bank number: %s" % key
+                    logging.info (_msg)
+                    self.feedOrClaim(key,action=actionForToday)
+                else:
+                    _msg = "Feeding the pigs - piggy bank number: %s" % key
+                    logging.info(_msg)
+                    self.feedOrClaim(key)
             else:
                 if nextFeed < _farmerSleepTime:
                     _farmerSleepTime = nextFeed
@@ -91,19 +139,26 @@ class PiggyBank:
         logging.info("I will sleep for %s - Next feeding is at %s" % (_farmerSleepTime, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
-        # for item in self.aa:
-        #     print (item[5])
-        #     # print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item[5]))) )
-        #     print("%s - %s " % (item[0], time.strftime('%Y-%m-%d %H:%M:%S', (datetime.fromtimestamp( item[5] )) )) )
-
-
-
-    def feed(self,ID):
+    def feedOrClaim(self,ID,action='compound'):
         max_tries = self.max_tries
         retry_sleep = self.max_tries_delay
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
         remaining_retries = max_tries
         txn_receipt = None
+        if action == 'claim':
+            tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
+                {"gasPrice": eth2wei(self.gas_price, "gwei"),
+                "from": self.address,
+                "gas": 571431,
+                "nonce": self.w3.eth.getTransactionCount(self.address)
+            })
+        else:
+            tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
+                {"gasPrice": eth2wei(self.gas_price, "gwei"),
+                "from": self.address,
+                "gas": 173344,
+                "nonce": self.w3.eth.getTransactionCount(self.address)
+            })
 
         if self.perform_piggybank_actions.lower() == "true":
             for _ in range(max_tries):
@@ -154,11 +209,6 @@ class PiggyBank:
             _piggyBankInfo.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
         return (_piggyBankInfo)
 
-    def getMyTruffles(self):
-        for x in range(8):
-            truffles = self.piggy_contract.functions.getMyTruffles(x).call()
-            truffles_sell = wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call())
-            print("%s - %s - %s" % (x,truffles,truffles_sell))
 
     def validateConfig(self):
         if self.private_key == "":
@@ -185,56 +235,63 @@ class PiggyBank:
         if self.pushover_user_key == 'False':
             self.pushover_user_key = False
 
-
-    def readInConfig(self, config_vars):
-        config_file = config_vars['config_file']
-        if config_vars['new_config'] == True:
+    def readInConfig(self):
+        config_file = self.config_file
+        if self.config_args['new_config'] == True:
             self.createDefaultConfig(config_file)
-        try:
-            config = configparser.ConfigParser({'min_bnb_balance': False, 'pushover_api_key': False, 'pushover_user_key': False}, inline_comment_prefixes="#")
-            config.read(config_file)
-            # [default]
-            self.private_key = config['default']['private_key']
-            self.wallet_friendly_name = config['default']['wallet_friendly_name']
-            self.pushover_api_key = config['default']['pushover_api_key']
-            self.pushover_user_key = config['default']['pushover_user_key']
-            # [piggybank]
-            self.perform_piggybank_actions = config['piggybank']['perform_piggybank_actions']
-            self.max_tries = int(config['piggybank']['max_tries'])
-            self.max_tries_delay = int(config['piggybank']['max_tries_delay'])
-            self.min_bnb_balance = config['piggybank']['min_bnb_balance']
-        except:
-            logging.info('There was an error opening the config file %s' % config_file)
-            logging.info('If this config file does not exist yet, run with -n to create')
-            print(traceback.format_exc())
-            sys.exit(2)
+        else: 
+            try:
+                config = configparser.ConfigParser({'min_bnb_balance': False, 'pushover_api_key': False, 'pushover_user_key': False}, inline_comment_prefixes="#")
+                config.read(config_file)
+                # [default]
+                self.private_key = config['default']['private_key']
+                self.wallet_friendly_name = config['default']['wallet_friendly_name']
+                self.pushover_api_key = config['default']['pushover_api_key']
+                self.pushover_user_key = config['default']['pushover_user_key']
+                # [piggybank]
+                self.perform_piggybank_actions = config['piggybank']['perform_piggybank_actions']
+                self.max_tries = int(config['piggybank']['max_tries'])
+                self.max_tries_delay = int(config['piggybank']['max_tries_delay'])
+                self.min_bnb_balance = config['piggybank']['min_bnb_balance']
+                return config
+            except:
+                logging.info('There was an error opening the config file %s' % config_file)
+                logging.info('If this config file does not exist yet, run with -n to create')
+                print(traceback.format_exc())
+                sys.exit(2)
 
     def createDefaultConfig(self, config_file):
+        _parser = configparser.ConfigParser()
         if os.path.exists(config_file):
-            logging.info("File '%s' already exists, not overwriting" % config_file)
-        else:
-            config = configparser.ConfigParser()
-            config['default'] = {
-                'private_key': '  # Mandatory - gives write access to your wallet KEEP THIS SECRET!!',
-                'wallet_friendly_name': 'Test Wallet  # Mandatory - Friendly name to display in output',
-                '#pushover_api_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.',
-                '#pushover_user_key': '  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.'
-                }
-            config['piggybank'] = {
-                'perform_piggybank_actions': 'False  # Set to true to actually perform compounding',
-                'max_tries': '2  # Number of retries on a transaction failure - will cost gas each time. 2 means try once more if there is a failure.',
-                'max_tries_delay': '180  # Seconds between retries on a transaction failure. Wait this long before trying again.',
-                '#min_bnb_balance': '0.02  # Optional -  Min BNB Balance to have in your wallet to allow compounding action'
-            }
-            # Open new file to write
-            try:
-                with open(config_file, "w") as f:
-                    config.write(f)
-                    logging.info("A new template file has been created at '%s'. Please review and update" % config_file)
+            _parser.read(config_file)
+        
+        # defaults
+        _parser = addNewConfigOption(_parser, 'default', 'private_key', '  # Mandatory - gives write access to your wallet KEEP THIS SECRET!!')
+        _parser = addNewConfigOption(_parser, 'default', 'wallet_friendly_name', 'Test Wallet  # Mandatory - Friendly name to display in output')
+        _parser = addNewConfigOption(_parser, 'default', 'pushover_api_key', 'False  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.')
+        _parser = addNewConfigOption(_parser, 'default', 'pushover_user_key', 'False  # Optional - If you have an account on https://pushover.net/ you can set this up to send notfications to your phone.')
+        # piggybank
+        _parser = addNewConfigOption(_parser, 'piggybank', 'perform_piggybank_actions', 'False  # Set to true to actually perform compounding')
+        _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries', '2  # Number of retries on a transaction failure - will cost gas each time. 2 means try once more if there is a failure.')
+        _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries_delay', '30  # Seconds between retries on a transaction failure. Wait this long before trying again.')
+        _parser = addNewConfigOption(_parser, 'piggybank', 'min_bnb_balance', '0.02  # Optional -  Min BNB Balance to have in your wallet to allow compounding action')
+        
+        self.writeConfigFile(_parser)
+
+    def writeConfigFile(self,parser,dontexit=False,writemsg=False):
+        config_file = self.config_args['config_file']
+        try:
+            with open(config_file, "w") as f:
+                parser.write(f)
+                if writemsg:
+                    logging.info(writemsg)
+                else:
+                    logging.info("Template file created &/or updated at '%s'. Please review" % config_file)
+                if dontexit == False:
                     sys.exit(0)
-            except IOError:
-                logging.info('Unable to write template file')
-                sys.exit(5)
+        except IOError:
+            logging.info('Unable to write template file')
+            sys.exit(5)
 
 
     def argparser(self):
@@ -291,8 +348,11 @@ def main():
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
         # Loop through all the returned piggy banks to either sleep or compound
-        sleep_time = piggybank.feedOrSleep(pbinfo)
-
+        prettyPrint(pbinfo)
+        piggybank.updatePiggyConfigFile(pbinfo)
+        sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
+        
+        sys.exit(2)
         time.sleep(sleep_time)
 
 if __name__ == "__main__":

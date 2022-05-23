@@ -1,3 +1,4 @@
+import re
 from web3 import Web3
 from decimal import Decimal
 import logging
@@ -66,3 +67,27 @@ def binance_api_get_price(symbol, max_tries=1):
 
 def getLocalTime(timeInEpoch):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timeInEpoch))
+
+def checkOptionExists(config,section,option):
+    _regexp="[;#\s]*" + option
+    for o in config.options(section):
+        if re.match(_regexp,o):
+            return True
+
+def checkSectionExists(config,section):
+    if config.has_section(section):
+        return True
+    else:
+        return False
+
+def addNewConfigOption(config,section,option,value):
+    if not checkSectionExists(config, section):
+        config.add_section(section)
+    if not checkOptionExists(config, section, option):
+        config.set(section, option, value)
+    return config
+
+def prettyPrint(data):
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(data)
