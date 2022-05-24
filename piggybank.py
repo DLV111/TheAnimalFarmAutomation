@@ -14,6 +14,13 @@ import argparse
 import configparser
 
 
+# AFP (Pigs) : 0x9a3321E1aCD3B9F6debEE5e042dD2411A1742002
+# AFP/BUSD (Pigs/busd): 0x2ce4aE0E7D05bc6ec0c22cDf87fF899872c2cF7f
+# DOGS: 0xDBdC73B95cC0D5e7E99dC95523045Fc8d075Fb9e
+# DOGS/BUSD LP: 0x70f01321CB37A37D4b095bBda7E4BF46E1C9F1F9
+# DOGS/WBNB LP: 0x761C695d5EF6e8eFBCF5FaE00035a589eD16477
+# DRIP/BUSD LP: 0xa0feb3c81a36e885b6608df7f0ff69db97491b58
+
 PIGGYBANK_CONTRACT_ADDR = "0x1514c766127378ea9653f9f4428fe25f3fd256c3"
 
 AFP_TOKEN_ADDRESS = "0x9a3321E1aCD3B9F6debEE5e042dD2411A1742002"
@@ -86,7 +93,7 @@ class PiggyBank:
                 anyUpdates = True
                 day = 0
                 week = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-                while day < 6:
+                while day < 7:
                     if day == 0:
                         _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound or claim - if unknown will compound')
                     else:
@@ -163,7 +170,7 @@ class PiggyBank:
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     _nextFeedID = key
 
-        logging.info("I will sleep for %s - Next feeding for ID %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
+        logging.info("I will sleep for %s - Next action for ID %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID,action="compound"):
