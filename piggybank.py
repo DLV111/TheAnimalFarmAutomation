@@ -22,7 +22,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybank.json"
-VERSION = '0.3'
+VERSION = '0.4'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -165,13 +165,14 @@ class PiggyBank:
         logging.info("I will sleep for %s - Next feeding for ID %s is at %s" % (_farmerSleepTime, key, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
-    def feedOrClaim(self,ID,action='compound'):
+    def feedOrClaim(self,ID,action="compound"):
+        logging.info("Performing action %s in function feedOrClaim" % action)
         max_tries = self.max_tries
         retry_sleep = self.max_tries_delay
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
         remaining_retries = max_tries
         txn_receipt = None
-        if action == 'claim':
+        if action == "claim":
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
                 {"gasPrice": eth2wei(self.gas_price, "gwei"),
                 "from": self.address,
