@@ -161,8 +161,9 @@ class PiggyBank:
                 if nextFeed < _farmerSleepTime:
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
+                    _nextFeedID = key
 
-        logging.info("I will sleep for %s - Next feeding for ID %s is at %s" % (_farmerSleepTime, key, getLocalTime(_nextFeedTime)))
+        logging.info("I will sleep for %s - Next feeding for ID %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID,action="compound"):
