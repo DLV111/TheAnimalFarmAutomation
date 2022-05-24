@@ -7,13 +7,19 @@ import time
 import calendar
 from datetime import datetime, date
 from pushover import Client
-from utils import eth2wei, prettyPrint, wei2eth, read_json_file, to_checksum, getLocalTime, addNewConfigOption
+from utils import eth2wei, prettyPrint, wei2eth, read_json_file, to_checksum, getLocalTime, addNewConfigOption, pancakeswap_api_get_price
+from utils import binance_api_get_price
 import traceback
 import argparse
 import configparser
 
 
 PIGGYBANK_CONTRACT_ADDR = "0x1514c766127378ea9653f9f4428fe25f3fd256c3"
+
+AFP_TOKEN_ADDRESS = "0x9a3321E1aCD3B9F6debEE5e042dD2411A1742002"
+BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+
+AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybank.json"
 VERSION = '0.3'
@@ -46,6 +52,27 @@ class PiggyBank:
 
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
+
+        token0_price_data = pancakeswap_api_get_price(AFP_TOKEN_ADDRESS)
+        # Currently no API to get a specific end pair end point
+        # https://github.com/pancakeswap/pancake-info-api/issues/10
+        pair0_price_data = pancakeswap_api_get_price("",type="pairs")
+
+        # print(token0_price_data)
+        # print(pair0_price_data['data'][AFP_BUSD_PAIR_ADDRESS])
+
+        # print(token1_price_data)
+        # sys.exit(2)
+        # Animal Farm Pigs / BUSD Pool - what truffles pay out in
+        # self.afp_busg = {
+        #     "price": 0,
+        #     "busd_price": 0,
+        #     "busd_reserve": 0,
+        #     "drip_price": 0,
+        #     "drip_reserve": 0,
+        #     "supply": 0,
+        #     "lp_ratio": Decimal(0.0)
+        # }
 
     def updatePiggyConfigFile(self,pbinfo):
         _parser = configparser.ConfigParser()
@@ -118,10 +145,10 @@ class PiggyBank:
         _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
         _nextFeedTime = ""
         for key,item in pbinfo.items():
-            actionForToday = self.getActionForToday(key)
-            #print ("key: %s - action: %s " % (key,actionForToday))
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
             if nextFeed <=0:
+                actionForToday = self.getActionForToday(key)
+                logging.info("key: %s - action: %s " % (key,actionForToday))
                 if actionForToday == "claim":
                     _msg = "Claiming the pigs - piggy bank number: %s - truffles: %s" % (key,self.my_piggybank[key]['currentTruffles'])
                     logging.info (_msg)
@@ -135,7 +162,7 @@ class PiggyBank:
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
 
-        logging.info("I will sleep for %s - Next feeding is at %s" % (_farmerSleepTime, getLocalTime(_nextFeedTime)))
+        logging.info("I will sleep for %s - Next feeding for ID %s is at %s" % (_farmerSleepTime, key, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID,action='compound'):
