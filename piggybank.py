@@ -170,7 +170,7 @@ class PiggyBank:
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     _nextFeedID = key
 
-        logging.info("I will sleep for %s - Next action for ID %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
+        logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID,action="compound"):
@@ -199,12 +199,6 @@ class PiggyBank:
             for _ in range(max_tries):
                 try:
                     remaining_retries+=-1
-                    tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
-                        {"gasPrice": eth2wei(self.gas_price, "gwei"),
-                        "from": self.address,
-                        "gas": 173344,
-                        "nonce": self.w3.eth.getTransactionCount(self.address)
-                    })
                     #print(tx)
                     signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
                     txn = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -215,10 +209,12 @@ class PiggyBank:
                         # self.getDripBalance()
                         if action == 'claim':
                             _msg = ("Successfully claimed %s truffles from the piggy bank %s - tx: https://bscscan.com/tx/%s" % (self.my_piggybank[ID]['currentTruffles'],ID,self.w3.toHex(txn)))
+                            _heading = "Claimed truffles"
                         else:
                             _msg = ("Successfully fed the piggy bank %s - tx: https://bscscan.com/tx/%s" % (ID,self.w3.toHex(txn)))
+                            _heading = "Fed the piglets"
                         logging.info(_msg)
-                        self.sendMessage("Fed the piglets", _msg)
+                        self.sendMessage(_heading, _msg)
                         break
                     else:
                         logging.info(txn_receipt)
@@ -234,8 +230,7 @@ class PiggyBank:
                     time.sleep(default_sleep_between_actions)
         else:
             logging.info("Compounding is set to False, only outputting some messages")
-            #logging.info("Updated Drip balance is: %s (Increase %s)" % (self.DripBalance,self.getDripBalanceIncrease()))
-            #self.sendMessage("Compounding Complete","Updated Balance %s (Increase %s) - tx %s" % (self.DripBalance,self.getDripBalanceIncrease(),'test:aaaabbbbccccdddd'))
+            logging.info(tx)
 
     def piggyBankInfo(self):
         _piggyBankInfo = []
