@@ -39,7 +39,7 @@ class PiggyBank:
         self.config = self.readInConfig()
         self.validateConfig()
 
-        logging.info('"%s" Selected for processing' % self.wallet_friendly_name)
+        logging.info('"%s" wallet selected for processing' % self.wallet_friendly_name)
         self.rounding = rounding
         self.txn_timeout = txn_timeout
         self.gas_price = gas_price
