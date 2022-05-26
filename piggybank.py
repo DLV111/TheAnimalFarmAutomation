@@ -81,7 +81,10 @@ class PiggyBank:
         #     "lp_ratio": Decimal(0.0)
         # }
 
-    def updatePiggyConfigFile(self,pbinfo):
+    def updatePiggyConfigFile(self,pbinfo: dict):
+        """
+        This will check your config file to see if all the piggy banks are present and if not add them in
+        """
         _parser = configparser.ConfigParser()
         anyUpdates = False
         config_file = self.config_args['config_file']
@@ -103,22 +106,35 @@ class PiggyBank:
             writemsg = "There has been a new piggy bank added to the config. Please review and update. Default action is to compound each day"
             self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
 
-    def calculateTruffleSell(self,truffles):
+    def calculateTruffleSell(self,truffles: int):
         print (self.piggy_contract.functions.calculateTruffleSell(truffles).call())
         print (wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call()))
 
-    def getMyTruffles(self,ID):
+    def getMyTruffles(self,ID: int):
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
+    def getNextFeedingTime(self,epochTime: int):
+        """
+        Returns in epoch time the next feeding time (24h from your last action)
+        """
+        return (epochTime+86400)
+
+    def getTimeToNextFeeding(self,epochTime: int):
+        """
+        Retruns how many seconds until the next piggy bank action
+        """
+        return (self.getNextFeedingTime(epochTime) - int(time.time()))
+
+
     def myPiggyBankDetails(self):
+        """
+        Builds a dict of every piggybank you have on the platform
+        """
         pbinfo = self.piggyBankInfo()
         self.my_piggybank = {} # This is an internal dict which contains all the info I need
         for pb in pbinfo:
             _ID = pb[0]
-            _nextFeeding = pb[4] + 86400
-            _timeToNextFeeding = _nextFeeding - int(time.time())
             currentTruffles = self.getMyTruffles(_ID)
-            # self.calculateTruffleSell(currentTruffles)
             self.my_piggybank.update({
                 _ID: {
                     "raw": pb,
@@ -126,19 +142,23 @@ class PiggyBank:
                     "isStakeOn": pb[1],
                     "hatcheryPiglets": pb[2],
                     "claimedTruffles": pb[3],
-                    "lastFeeding": pb[4],
+                    "lastFeeding": pb[4],  # This is the last time you claimed or fed
                     "lastCompounded": pb[5],
                     "trufflesUsed": pb[6],
                     "trufflesSold": pb[7],
                     "isMaxPayOut": pb[8],
-                    "nextFeeding": _nextFeeding,
-                    "timeToNextFeeding": _timeToNextFeeding,
+                    "nextFeeding": self.getNextFeedingTime(pb[4]),
+                    "timeToNextFeeding": self.getTimeToNextFeeding(pb[4]),
                     "currentTruffles": currentTruffles,
                 }
             })
         return (self.my_piggybank)
 
     def getActionForToday(self,ID):
+        """
+        Returns the action for your piggybank for today
+        Default if unknown or error is compound
+        """
         curr_date = date.today()
         day = str(calendar.day_name[curr_date.weekday()]).lower()
         config = self.readInConfig()
@@ -148,6 +168,10 @@ class PiggyBank:
             return ('compound')
 
     def feedOrSleepOrClaim(self,pbinfo):
+        """
+        Works out if you should feed, sleep or claim on all of your piggybanks
+        Then passes the action to the function to perform the task
+        """
         logging.info("Working out if I feed or claim or sleep...")
         _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
         _nextFeedTime = ""
@@ -168,12 +192,21 @@ class PiggyBank:
                 if nextFeed < _farmerSleepTime:
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
-                    _nextFeedID = key
+                    self.nextPiggyBankFeedID = key
 
-        logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, _nextFeedID, getLocalTime(_nextFeedTime)))
+        # This makes sure we get the absolute accurate time to start to perform the next function
+        _farmerSleepTime = self.getTimeToNextFeeding(pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
+        logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
-    def feedOrClaim(self,ID,action="compound"):
+    def feedOrClaim(self,ID:int,action:str="compound"):
+        """
+        Performs the contract call
+        
+        ID: the ID of your piggybank to perform the action again
+        
+        action: default is compound, other is claim
+        """
         logging.info("Performing action %s in function feedOrClaim" % action)
         max_tries = self.max_tries
         retry_sleep = self.max_tries_delay
@@ -376,12 +409,9 @@ def main():
 
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
-        # Loop through all the returned piggy banks to either sleep or compound
-        # prettyPrint(pbinfo)
         piggybank.updatePiggyConfigFile(pbinfo)
+        # Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-
-        # sys.exit(2)
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
