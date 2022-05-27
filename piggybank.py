@@ -28,7 +28,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
-PIGGYBANK_ABI_FILE = "./abis/piggybank.json"
+PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
 VERSION = '0.4'
 
 class PiggyBank:
