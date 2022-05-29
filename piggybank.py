@@ -123,7 +123,10 @@ class PiggyBank:
         """
         Retruns how many seconds until the next piggy bank action
         """
-        return (self.getNextFeedingTime(epochTime) - int(time.time()))
+        if self.getNextFeedingTime(epochTime) - int(time.time()) < 0:
+            return 0
+        else:
+            return (self.getNextFeedingTime(epochTime) - int(time.time()))
 
 
     def myPiggyBankDetails(self):
@@ -179,7 +182,7 @@ class PiggyBank:
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
             if nextFeed <=0:
                 actionForToday = self.getActionForToday(key)
-                logging.info("key: %s - action: %s " % (key,actionForToday))
+                logging.info("PiggyBank: %s - action: %s " % (key,actionForToday))
                 if actionForToday == "claim":
                     _msg = "Claiming the pigs - piggy bank number: %s - truffles: %s" % (key,self.my_piggybank[key]['currentTruffles'])
                     logging.info (_msg)
