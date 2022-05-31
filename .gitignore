@@ -1,0 +1,4 @@
+__pycache__/**
+
+run_docker_container.sh
+testing/**
