@@ -66,8 +66,6 @@ class PiggyBank:
         # https://github.com/pancakeswap/pancake-info-api/issues/10
         pair0_price_data = pancakeswap_api_get_price("",type="pairs")
 
-        self.sendMessage('init','test')
-
         # print(token0_price_data)
         # print(pair0_price_data['data'][AFP_BUSD_PAIR_ADDRESS])
 
