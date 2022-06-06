@@ -12,6 +12,7 @@ from utils import binance_api_get_price
 import traceback
 import argparse
 import configparser
+from threading import Thread
 
 
 # AFP (Pigs) : 0x9a3321E1aCD3B9F6debEE5e042dD2411A1742002
@@ -29,7 +30,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
-VERSION = '0.4'
+VERSION = '0.5'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -395,7 +396,8 @@ class PiggyBank:
         if self.pushover_api_key and self.pushover_user_key:
             title_txt = ("%s: %s" % (self.wallet_friendly_name,title_txt) )
             logging.info("PushOver Notification\n\rTitle: %s\n\rBody: %s" % (title_txt,body))
-            self.client.send_message(body, title=title_txt)
+            # Do this in a thread so we aren't waiting for it to happen
+            Thread(target=self.client.send_message,kwargs={'message': body, 'title': title_txt}).start()
 
     def PushOverClientInit(self):
         if self.pushover_api_key and self.pushover_user_key:
