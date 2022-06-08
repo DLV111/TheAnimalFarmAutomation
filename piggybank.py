@@ -417,7 +417,7 @@ def main():
         piggybank.updatePiggyConfigFile(pbinfo)
         # Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-        time.sleep(sleep_time)
+        time.sleep(sleep_time-5)  # Drop 5s as that seems to be the d
 
 if __name__ == "__main__":
    main()
