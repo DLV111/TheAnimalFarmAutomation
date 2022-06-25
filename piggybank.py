@@ -208,9 +208,9 @@ class PiggyBank:
     def feedOrClaim(self,ID:int,action:str="compound"):
         """
         Performs the contract call
-        
+
         ID: the ID of your piggybank to perform the action again
-        
+
         action: default is compound, other is claim
         """
         logging.info("Performing action %s in function feedOrClaim" % action)
@@ -307,7 +307,7 @@ class PiggyBank:
         config_file = self.config_file
         if self.config_args['new_config'] == True:
             self.createDefaultConfig(config_file)
-        else: 
+        else:
             try:
                 config = configparser.ConfigParser({'min_bnb_balance': False, 'pushover_api_key': False, 'pushover_user_key': False}, inline_comment_prefixes="#")
                 config.read(config_file)
@@ -332,7 +332,7 @@ class PiggyBank:
         _parser = configparser.ConfigParser()
         if os.path.exists(config_file):
             _parser.read(config_file)
-        
+
         # defaults
         _parser = addNewConfigOption(_parser, 'default', 'private_key', '  # Mandatory - gives write access to your wallet KEEP THIS SECRET!!')
         _parser = addNewConfigOption(_parser, 'default', 'wallet_friendly_name', 'Test Wallet  # Mandatory - Friendly name to display in output')
@@ -343,7 +343,7 @@ class PiggyBank:
         _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries', '2  # Number of retries on a transaction failure - will cost gas each time. 2 means try once more if there is a failure.')
         _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries_delay', '30  # Seconds between retries on a transaction failure. Wait this long before trying again.')
         _parser = addNewConfigOption(_parser, 'piggybank', 'min_bnb_balance', '0.02  # Optional -  Min BNB Balance to have in your wallet to allow compounding action')
-        
+
         self.writeConfigFile(_parser)
 
     def writeConfigFile(self,parser,dontexit=False,writemsg=False):
