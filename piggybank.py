@@ -5,7 +5,7 @@ import logging
 import sys
 import time
 import calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pushover import Client
 from utils import eth2wei, prettyPrint, wei2eth, read_json_file, to_checksum, getLocalTime, addNewConfigOption, pancakeswap_api_get_price
 from utils import binance_api_get_price
@@ -114,20 +114,41 @@ class PiggyBank:
     def getMyTruffles(self,ID: int):
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
-    def getNextFeedingTime(self,epochTime: int):
+    def getSecondsToAddToNextFeedingTime(self,ID):
+        """
+        Returns how many 24 hour periods until the next non-skip action
+        """
+        days_to_add=0
+        curr_date = date.today()
+        day = str(calendar.day_name[curr_date.weekday()]).lower()
+        config = self.readInConfig()
+        while True:
+            if config['piggybank_' + str(ID)][day] == "skip":
+                # Need to calculate if today's time has passed, then we don't want to add 1 day
+                days_to_add+=1
+                next_date_test = curr_date + timedelta(days=days_to_add)
+                day = str(calendar.day_name[next_date_test.weekday()]).lower()
+            else:
+                break
+            if (days_to_add >= 8):
+                break
+        return((days_to_add*86400)+86400) # Days to add + 24 hours as we are getting at least 24 hours ahead
+
+    def getNextFeedingTime(self,ID: int, epochTime: int):
         """
         Returns in epoch time the next feeding time (24h from your last action)
         """
-        return (epochTime+86400)
+        seconds_to_add = self.getSecondsToAddToNextFeedingTime(ID)
+        return (epochTime+seconds_to_add)
 
-    def getTimeToNextFeeding(self,epochTime: int):
+    def getTimeToNextFeeding(self,ID: int, epochTime: int):
         """
-        Retruns how many seconds until the next piggy bank action
+        Re-runs how many seconds until the next piggy bank action
         """
-        if self.getNextFeedingTime(epochTime) - int(time.time()) < 0:
+        if self.getNextFeedingTime(ID, epochTime) - int(time.time()) < 0:
             return 0
         else:
-            return (self.getNextFeedingTime(epochTime) - int(time.time()))
+            return (self.getNextFeedingTime(ID, epochTime) - int(time.time()))
 
 
     def myPiggyBankDetails(self):
@@ -151,8 +172,8 @@ class PiggyBank:
                     "trufflesUsed": pb[6],
                     "trufflesSold": pb[7],
                     "isMaxPayOut": pb[8],
-                    "nextFeeding": self.getNextFeedingTime(pb[4]),
-                    "timeToNextFeeding": self.getTimeToNextFeeding(pb[4]),
+                    "nextFeeding": self.getNextFeedingTime(_ID, pb[4]),
+                    "timeToNextFeeding": self.getTimeToNextFeeding(_ID, pb[4]),
                     "currentTruffles": currentTruffles,
                 }
             })
@@ -171,13 +192,22 @@ class PiggyBank:
         except:
             return ('compound')
 
+    def getNextNonSkipAction(self,ID):
+        """
+        Returns how many 24 hour periods until the next non-skip action
+        """
+        curr_date = date.today()
+        day = str(calendar.day_name[curr_date.weekday()]).lower()
+        config = self.readInConfig()
+
+
     def feedOrSleepOrClaim(self,pbinfo):
         """
         Works out if you should feed, sleep or claim on all of your piggybanks
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
+        _farmerSleepTime = 86400*7 # Max of 7 days, but will be reduced as soon as this is run
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -199,7 +229,13 @@ class PiggyBank:
                     self.nextPiggyBankFeedID = key
 
         # This makes sure we get the absolute accurate time to start to perform the next function
-        _farmerSleepTime = self.getTimeToNextFeeding(pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
+        try:
+            _farmerSleepTime = self.getTimeToNextFeeding(self.nextPiggyBankFeedID, pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
+        except:
+            _errormsg="There is no action in 7 days (%ss), please check your config" % _farmerSleepTime
+            logging.info(_errormsg)
+            raise Exception(_errormsg)
+
         if _farmerSleepTime > 5:
             _farmerSleepTime = _farmerSleepTime-5  # Drop 5 seconds as there is a delay somewhere!
         logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
@@ -413,11 +449,16 @@ def main():
     logging.info('----------------')
 
     piggybank = PiggyBank()
+    pbinfo = piggybank.myPiggyBankDetails()
 
+    # print(pbinfo[0])
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
         piggybank.updatePiggyConfigFile(pbinfo)
         # Loop through all the returned piggy banks to either sleep or compound
+        for key,item in pbinfo.items():
+            print("%s - %s" % (key, getLocalTime(item['nextFeeding'])))
+        sys.exit(1)
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
         time.sleep(sleep_time)
 
