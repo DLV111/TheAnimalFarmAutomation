@@ -200,6 +200,8 @@ class PiggyBank:
 
         # This makes sure we get the absolute accurate time to start to perform the next function
         _farmerSleepTime = self.getTimeToNextFeeding(pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
+        if _farmerSleepTime > 5:
+            _farmerSleepTime = _farmerSleepTime-5  # Drop 5 seconds as there is a delay somewhere!
         logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
@@ -417,7 +419,7 @@ def main():
         piggybank.updatePiggyConfigFile(pbinfo)
         # Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-        time.sleep(sleep_time-5)  # Drop 5s as that seems to be the difference seen - may differ for others
+        time.sleep(sleep_time)
 
 if __name__ == "__main__":
    main()
