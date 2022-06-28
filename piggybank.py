@@ -127,7 +127,7 @@ class PiggyBank:
         """
         days_to_add=0
         curr_date = date.today()
-        if time.time() > last_action: # If we have already performed the action today, then we want to get tomorrow's action
+        if time.localtime(last_action) >= time.localtime(time.time()): # If we have already performed the action today, then we want to get tomorrow's action
             curr_date = curr_date + timedelta(days=1)
         day = str(calendar.day_name[curr_date.weekday()]).lower()
         while True:
