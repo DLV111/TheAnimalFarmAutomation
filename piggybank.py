@@ -60,11 +60,13 @@ class PiggyBank:
 
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
+        # Add any new PB's into the config file
+        self.updatePiggyConfigFile(self.piggybankCount)
 
-        token0_price_data = pancakeswap_api_get_price(AFP_TOKEN_ADDRESS)
+        # token0_price_data = pancakeswap_api_get_price(AFP_TOKEN_ADDRESS)
         # Currently no API to get a specific end pair end point
         # https://github.com/pancakeswap/pancake-info-api/issues/10
-        pair0_price_data = pancakeswap_api_get_price("",type="pairs")
+        # pair0_price_data = pancakeswap_api_get_price("",type="pairs")
 
         # print(token0_price_data)
         # print(pair0_price_data['data'][AFP_BUSD_PAIR_ADDRESS])
@@ -82,30 +84,29 @@ class PiggyBank:
         #     "lp_ratio": Decimal(0.0)
         # }
 
-    def updatePiggyConfigFile(self,pbinfo: dict):
+    def updatePiggyConfigFile(self,pbcount: int):
         """
         This will check your config file to see if all the piggy banks are present and if not add them in
         """
+        pb_num=0
         _parser = configparser.ConfigParser()
-        anyUpdates = False
         config_file = self.config_args['config_file']
         if os.path.exists(config_file):
             _parser.read(config_file)
-        for key,item in pbinfo.items():
-            section = "piggybank_" + str(key)
+        while pb_num < pbcount:
+            section = "piggybank_" + str(pb_num)
             if not _parser.has_section(section):
-                anyUpdates = True
                 day = 0
                 week = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
                 while day < 7:
                     if day == 0:
-                        _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound or claim - if unknown will compound')
+                        _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound, claim or skip - if unknown will compound')
                     else:
                         _parser = addNewConfigOption(_parser, section, week[day], 'compound')
                     day += 1
-        if anyUpdates:
-            writemsg = "There has been a new piggy bank added to the config. Please review and update. Default action is to compound each day"
-            self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
+                writemsg = "New piggybank (No. %s) has been added to the config. Please review and update. Default action is to compound each day" % pb_num
+                self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
+            pb_num += 1
 
     def calculateTruffleSell(self,truffles: int):
         print (self.piggy_contract.functions.calculateTruffleSell(truffles).call())
@@ -114,32 +115,47 @@ class PiggyBank:
     def getMyTruffles(self,ID: int):
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
-    def getSecondsToAddToNextFeedingTime(self,ID):
-        """
-        Returns how many 24 hour periods until the next non-skip action
+    def getNextFeedingTime(self,ID: int, last_action: int):
+        """Returns in epoch time the next action
+
+        Args:
+            ID (int): Piggybank ID
+            last_action (int): epoch time of last action
+
+        Returns:
+            int: epochtime of next action
         """
         days_to_add=0
         curr_date = date.today()
+        if time.time() > last_action: # If we have already performed the action today, then we want to get tomorrow's action
+            curr_date = curr_date + timedelta(days=1)
         day = str(calendar.day_name[curr_date.weekday()]).lower()
-        config = self.readInConfig()
         while True:
-            if config['piggybank_' + str(ID)][day] == "skip":
-                # Need to calculate if today's time has passed, then we don't want to add 1 day
-                days_to_add+=1
-                next_date_test = curr_date + timedelta(days=days_to_add)
-                day = str(calendar.day_name[next_date_test.weekday()]).lower()
+            if self.config['piggybank_' + str(ID)][day]:
+                if self.config['piggybank_' + str(ID)][day] == "skip":
+                    # Need to calculate if today's time has passed, then we don't want to add 1 day
+                    days_to_add+=1
+                    next_date_test = curr_date + timedelta(days=days_to_add)
+                    day = str(calendar.day_name[next_date_test.weekday()]).lower()
+                else:
+                    break
             else:
                 break
             if (days_to_add >= 8):
                 break
-        return((days_to_add*86400)+86400) # Days to add + 24 hours as we are getting at least 24 hours ahead
+        seconds_to_add = ((days_to_add*86400)+86400) # Days to add + 24 hours as we are getting at least 24 hours ahead
+        return (last_action+seconds_to_add)
 
-    def getNextFeedingTime(self,ID: int, epochTime: int):
+    def getNextAction(self, ID: int, next_action: int):
+        """Return the next action for the piggy bank
+
+        Args:
+            ID (int): ID of the piggybank
+            next_action (int): time in epoch of the next action
         """
-        Returns in epoch time the next feeding time (24h from your last action)
-        """
-        seconds_to_add = self.getSecondsToAddToNextFeedingTime(ID)
-        return (epochTime+seconds_to_add)
+        date_time_obj = datetime.strptime(getLocalTime(next_action), '%Y-%m-%d %H:%M:%S')
+        day = str(calendar.day_name[date_time_obj.weekday()]).lower()
+        return (self.config['piggybank_' + str(ID)][day])
 
     def getTimeToNextFeeding(self,ID: int, epochTime: int):
         """
@@ -156,10 +172,12 @@ class PiggyBank:
         Builds a dict of every piggybank you have on the platform
         """
         pbinfo = self.piggyBankInfo()
+        self.config = self.readInConfig()  # Always read in the latest config when we get the details
         self.my_piggybank = {} # This is an internal dict which contains all the info I need
         for pb in pbinfo:
             _ID = pb[0]
             currentTruffles = self.getMyTruffles(_ID)
+            _nextFeedingTime = self.getNextFeedingTime(_ID, pb[4])
             self.my_piggybank.update({
                 _ID: {
                     "raw": pb,
@@ -172,8 +190,9 @@ class PiggyBank:
                     "trufflesUsed": pb[6],
                     "trufflesSold": pb[7],
                     "isMaxPayOut": pb[8],
-                    "nextFeeding": self.getNextFeedingTime(_ID, pb[4]),
+                    "nextFeeding": _nextFeedingTime,
                     "timeToNextFeeding": self.getTimeToNextFeeding(_ID, pb[4]),
+                    "nextAction": self.getNextAction(_ID, _nextFeedingTime),
                     "currentTruffles": currentTruffles,
                 }
             })
@@ -192,22 +211,13 @@ class PiggyBank:
         except:
             return ('compound')
 
-    def getNextNonSkipAction(self,ID):
-        """
-        Returns how many 24 hour periods until the next non-skip action
-        """
-        curr_date = date.today()
-        day = str(calendar.day_name[curr_date.weekday()]).lower()
-        config = self.readInConfig()
-
-
     def feedOrSleepOrClaim(self,pbinfo):
         """
         Works out if you should feed, sleep or claim on all of your piggybanks
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400*7 # Max of 7 days, but will be reduced as soon as this is run
+        _farmerSleepTime = 86400 # Max of 1 day, but may be reduced as soon as this is run
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -232,13 +242,13 @@ class PiggyBank:
         try:
             _farmerSleepTime = self.getTimeToNextFeeding(self.nextPiggyBankFeedID, pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
         except:
-            _errormsg="There is no action in 7 days (%ss), please check your config" % _farmerSleepTime
+            _errormsg="Something went wrong with sleep timer (%ss), please check your config" % _farmerSleepTime
             logging.info(_errormsg)
             raise Exception(_errormsg)
 
         if _farmerSleepTime > 5:
             _farmerSleepTime = _farmerSleepTime-5  # Drop 5 seconds as there is a delay somewhere!
-        logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
+        logging.info("I will sleep for %s - Next action(%s) for piggybank %s is at %s" % (_farmerSleepTime, pbinfo[self.nextPiggyBankFeedID]['nextAction'], self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID:int,action:str="compound"):
@@ -451,14 +461,13 @@ def main():
     piggybank = PiggyBank()
     pbinfo = piggybank.myPiggyBankDetails()
 
-    # print(pbinfo[0])
+    logging.info("These are the next startup actions. These actions dynamically change as time goes on. This only shows you 'now'")
+    for key,item in pbinfo.items():
+        logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
+
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
-        piggybank.updatePiggyConfigFile(pbinfo)
         # Loop through all the returned piggy banks to either sleep or compound
-        for key,item in pbinfo.items():
-            print("%s - %s" % (key, getLocalTime(item['nextFeeding'])))
-        sys.exit(1)
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
         time.sleep(sleep_time)
 
