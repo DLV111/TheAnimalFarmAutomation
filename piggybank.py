@@ -469,6 +469,9 @@ def main():
         pbinfo = piggybank.myPiggyBankDetails()
         # Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
+        for key,item in pbinfo.items():
+            logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
+
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
