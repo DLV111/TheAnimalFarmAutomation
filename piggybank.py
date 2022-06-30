@@ -127,7 +127,8 @@ class PiggyBank:
         """
         days_to_add=0
         curr_date = date.today()
-        if time.localtime(last_action) >= time.localtime(time.time()): # If we have already performed the action today, then we want to get tomorrow's action
+        # If 'now' is greater than the last action, then the action has already happened today
+        if time.localtime() >= time.localtime(last_action):
             curr_date = curr_date + timedelta(days=1)
         day = str(calendar.day_name[curr_date.weekday()]).lower()
         while True:
@@ -228,6 +229,8 @@ class PiggyBank:
                     _msg = "Claiming the pigs - piggy bank number: %s - truffles: %s" % (key,self.my_piggybank[key]['currentTruffles'])
                     logging.info (_msg)
                     self.feedOrClaim(key,action=actionForToday)
+                elif actionForToday == "skip":
+                    logging.info ("skipping piggy bank %s" % key)
                 else:
                     _msg = "Feeding the pigs - piggy bank number: %s" % key
                     logging.info(_msg)
