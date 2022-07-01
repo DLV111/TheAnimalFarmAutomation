@@ -127,11 +127,12 @@ class PiggyBank:
         """
         days_to_add=0
         curr_date = date.today()
-        next_day=False
-        # If 'now' is greater than the last action, then the action has already happened today so lets goto tomorrow
-        if time.localtime() >= time.localtime(last_action+86400):
+        # next_day=False
+        # If 'now' is greater than the last action time, then the action has already happened today so lets goto tomorrow
+        if time.strftime("%H:%M:%S",time.localtime()) >= time.strftime("%H:%M:%S",time.localtime(last_action)):
+            # print(f"{ID} {time.localtime(last_action)}")
             curr_date = curr_date + timedelta(days=1)
-            next_day=True
+            # next_day=True
         day = str(calendar.day_name[curr_date.weekday()]).lower()
         while True:
             if self.config['piggybank_' + str(ID)][day]:
@@ -146,8 +147,8 @@ class PiggyBank:
                 break
             if (days_to_add >= 8):
                 break
-        if next_day:
-            days_to_add+=1
+        # if next_day:
+        #     days_to_add+=1
         seconds_to_add = ((days_to_add*86400)+86400) # Days to add + 24 hours as we are getting at least 24 hours ahead
         return (last_action+seconds_to_add)
 
