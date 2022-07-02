@@ -30,7 +30,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
-VERSION = '0.6'
+VERSION = '0.7'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -116,10 +116,16 @@ class PiggyBank:
     def getMyTruffles(self,ID: int):
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
-    def addDay(self,day: int):
-        day +=1
-        # print(f"Day added, days is now {day}")
-        return day
+    def getDay(self,epoch_time: int):
+        """_summary_
+
+        Args:
+            epoch_time (int): Time in epoch
+
+        Returns:
+            string: Day of the week (monday, tuesday etc)
+        """
+        return str(calendar.day_name[datetime.fromtimestamp(epoch_time).weekday()]).lower()
 
     def getNextFeedingTime(self,ID: int, last_action: int):
         """Returns in epoch time the next action
@@ -132,59 +138,30 @@ class PiggyBank:
             int: epochtime of next action
         """
         days_to_add=0
-        curr_date = date.today()
-        last_date = curr_date
-        next_day=False
-        # print(getLocalTime(last_action))
-        # print(getLocalTime(time.time()))
-        aa = time.time()-last_action
-        # print(aa)
-        # print(str(timedelta(seconds=aa)))
-        import math
-        # print(time.localtime(last_action).tm_mday)
-        # print(time.localtime().tm_mday)
+        # Gives us the last action in datetime format (for date calculations)
         dt_last_action = datetime.fromtimestamp(last_action)
-        dt_now = datetime.now()
-
-        # yesterday = datetime.strftime()
-        #datetime_object = datetime.strptime('Jun 1 2005  1:33PM', '%b %d %Y %I:%M%p')
-
-
-        delta = dt_now.day - dt_last_action.day
-        # print(f"delta for {ID} is: {delta}")
-        days_since_last_action = (math.floor(aa/86400))
-        # print(f"days since last action: {days_since_last_action}")
-        # print(f"{days_since_last_action} days since last action")
-        # If 'now' is greater than the last action time, then the action has already happened today so lets goto tomorrow
-        if time.strftime("%H:%M:%S",time.localtime()) >= time.strftime("%H:%M:%S",time.localtime(last_action)):
-            # print(f"{ID} {time.localtime(last_action)}")
-            # print("adding a day in the strftime area")
-            curr_date = curr_date + timedelta(days=1)
-            days_to_add = self.addDay(days_to_add)
-        # if delta == 0 and aa < 86400:
-            # delta+=1
-            # print(f"{ID} {time.localtime(last_action)}")
-            # curr_date = curr_date + timedelta(days=1)
-            # next_day=True
-        day = str(calendar.day_name[curr_date.weekday()]).lower()
-        # print(f"ID {ID} - day: {day}")
+        # Get the different in days between last action and now
+        last_action_yesterday = datetime.now() - dt_last_action
+        # Create this gives us the last action as if it was yesterday
+        yesterday_action_epoch = (86400 * last_action_yesterday.days) + last_action
+        # Gives us the next action - eg 24 hours ahead from the last action
+        next_action_epoch = yesterday_action_epoch + 86400
+        # Get the day of the next action
+        day = self.getDay(next_action_epoch)
         while True:
+            # If today is skip, then add 24 hours and check if its skip again
             if self.config['piggybank_' + str(ID)][day] == "skip":
                 # Need to calculate if today's time has passed, then we don't want to add 1 day
-                days_to_add = self.addDay(days_to_add)
-                next_date_test = curr_date + timedelta(days=days_to_add)
-                day = str(calendar.day_name[next_date_test.weekday()]).lower()
+                next_action_epoch = next_action_epoch+86400
+                # this is just to capture the break days bit
+                days_to_add+=1
+                day = self.getDay(next_action_epoch)
             else:
                 break
-            if (days_to_add >= 8):
+            # if its all skip's this breaks the loop
+            if (days_to_add >= 7):
                 break
-        # if days_since_last_action > 0:
-        days_to_add+=delta
-        # if days_to_add == 0:
-            # days_to_add+=1
-        # print(f"days to add = {days_to_add}")
-        seconds_to_add = (days_to_add*86400)
-        return (last_action+seconds_to_add)
+        return (next_action_epoch)
 
     def getNextAction(self, ID: int, next_action: int):
         """Return the next action for the piggy bank
