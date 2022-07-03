@@ -492,11 +492,11 @@ def main():
         for key,item in pbinfo.items():
             logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
         end_of_day = time_until_end_of_day()+1
-        if sleep_time > end_of_day:
-            logging.info(f"sleeping until end of day - {end_of_day}")
-            time.sleep(end_of_day)
-        else:
-            time.sleep(sleep_time)
+        # if sleep_time > end_of_day:
+        #     logging.info(f"sleeping until end of day - {end_of_day}")
+        #     time.sleep(end_of_day)
+        # else:
+        time.sleep(sleep_time)
 
 if __name__ == "__main__":
    main()
