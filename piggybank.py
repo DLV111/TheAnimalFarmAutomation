@@ -161,6 +161,11 @@ class PiggyBank:
             # if its all skip's this breaks the loop
             if (days_to_add >= 7):
                 break
+        yesterday = self.getDay(yesterday_action_epoch)
+        # If yesterday was anything but skip and this is true, the action in the last 24 hours failed to happen, so do it now!
+        if last_action_yesterday.days > 0 and self.config['piggybank_' + str(ID)][yesterday] != "skip":
+            # print(f"Yesterday action {yesterday} for {ID}  was.. - {self.config['piggybank_' + str(ID)][yesterday]}")
+            next_action_epoch = yesterday_action_epoch
         return (next_action_epoch)
 
     def getNextAction(self, ID: int, next_action: int):
