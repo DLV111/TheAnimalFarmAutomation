@@ -1,4 +1,5 @@
 from calendar import weekday
+from math import floor
 from web3 import Web3
 import os
 import logging
@@ -262,16 +263,7 @@ class PiggyBank:
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
-        # This makes sure we get the absolute accurate time to start to perform the next function
-        try:
-            _farmerSleepTime = self.getTimeToNextFeeding(self.nextPiggyBankFeedID, pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
-        except:
-            _errormsg="Something went wrong with sleep timer (%ss), please check your config" % _farmerSleepTime
-            logging.info(_errormsg)
-            raise Exception(_errormsg)
-
-        if _farmerSleepTime > 5:
-            _farmerSleepTime = _farmerSleepTime-5  # Drop 5 seconds as there is a delay somewhere!
+        _farmerSleepTime = floor(_nextFeedTime-time.time())
         logging.info("I will sleep for %s - Next action(%s) for piggybank %s is at %s" % (_farmerSleepTime, pbinfo[self.nextPiggyBankFeedID]['nextAction'], self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
@@ -496,11 +488,6 @@ def main():
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
         for key,item in pbinfo.items():
             logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
-        end_of_day = time_until_end_of_day()+1
-        # if sleep_time > end_of_day:
-        #     logging.info(f"sleeping until end of day - {end_of_day}")
-        #     time.sleep(end_of_day)
-        # else:
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
