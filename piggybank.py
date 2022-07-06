@@ -65,27 +65,6 @@ class PiggyBank:
         # Add any new PB's into the config file
         self.updatePiggyConfigFile(self.piggybankCount)
 
-        # token0_price_data = pancakeswap_api_get_price(AFP_TOKEN_ADDRESS)
-        # Currently no API to get a specific end pair end point
-        # https://github.com/pancakeswap/pancake-info-api/issues/10
-        # pair0_price_data = pancakeswap_api_get_price("",type="pairs")
-
-        # print(token0_price_data)
-        # print(pair0_price_data['data'][AFP_BUSD_PAIR_ADDRESS])
-
-        # print(token1_price_data)
-        # sys.exit(2)
-        # Animal Farm Pigs / BUSD Pool - what truffles pay out in
-        # self.afp_busg = {
-        #     "price": 0,
-        #     "busd_price": 0,
-        #     "busd_reserve": 0,
-        #     "drip_price": 0,
-        #     "drip_reserve": 0,
-        #     "supply": 0,
-        #     "lp_ratio": Decimal(0.0)
-        # }
-
     def updatePiggyConfigFile(self,pbcount: int):
         """
         This will check your config file to see if all the piggy banks are present and if not add them in
@@ -111,14 +90,27 @@ class PiggyBank:
             pb_num += 1
 
     def calculateTruffleSell(self,truffles: int):
+        """Calculate the truffle sell price - currently unused
+
+        Args:
+            truffles (int): Number of truffles used to calculate
+        """
         print (self.piggy_contract.functions.calculateTruffleSell(truffles).call())
         print (wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call()))
 
     def getMyTruffles(self,ID: int):
+        """Query the BSC PB Contract for the number of truffles avail
+
+        Args:
+            ID (int): Piggybank ID to query
+
+        Returns:
+            int: Number of truffles avail to the Piggybank ID
+        """
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
     def getDay(self,epoch_time: int):
-        """_summary_
+        """Get the current day from an epoch time, eg monday, tuesday etc
 
         Args:
             epoch_time (int): Time in epoch
@@ -334,6 +326,11 @@ class PiggyBank:
             logging.info(tx)
 
     def piggyBankInfo(self):
+        """Talk to BSC to get the piggy bank information
+
+        Returns:
+            dict: All the information about the piggy banks you have
+        """
         _piggyBankInfo = []
         for x in range(self.piggybankCount):
             _piggyBankInfo.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
@@ -341,6 +338,8 @@ class PiggyBank:
 
 
     def validateConfig(self):
+        """Validate the config you have in place works as expected
+        """
         if self.private_key == "":
             logging.info("private_key is not set")
             sys.exit(1)
@@ -366,6 +365,12 @@ class PiggyBank:
             self.pushover_user_key = False
 
     def readInConfig(self):
+        """Reads in the config file and all option
+        if things are missing it will add them in
+
+        Returns:
+            ConfigParser: Returns all the config from the file
+        """
         config_file = self.config_file
         if self.config_args['new_config'] == True:
             self.createDefaultConfig(config_file)
@@ -391,6 +396,11 @@ class PiggyBank:
                 sys.exit(2)
 
     def createDefaultConfig(self, config_file):
+        """Creates the default config for the configuration file
+
+        Args:
+            config_file (str): Path to the config file to write
+        """
         _parser = configparser.ConfigParser()
         if os.path.exists(config_file):
             _parser.read(config_file)
@@ -409,6 +419,13 @@ class PiggyBank:
         self.writeConfigFile(_parser)
 
     def writeConfigFile(self,parser,dontexit=False,writemsg=False):
+        """If theres a new piggy bank update the config dynmically
+
+        Args:
+            parser (_type_): _description_
+            dontexit (bool, optional): If the code should exit on a new PB Defaults to False.
+            writemsg (bool, optional): Write a message to the logs if a new PB has been added. Defaults to False.
+        """
         config_file = self.config_args['config_file']
         try:
             with open(config_file, "w") as f:
@@ -425,6 +442,8 @@ class PiggyBank:
 
 
     def argparser(self):
+        """Gets the arguments from the CLI when you launch the python code
+        """
         import textwrap
         description = textwrap.dedent('''
             Piggy Bank Compounding
@@ -441,13 +460,19 @@ class PiggyBank:
         return(vars(args))
 
     def getAvailableClaims(self):
+        """Query the BSC Chain/PB contract for the avail claims
+        """
         self.claimsAvailable = round(wei2eth(self.piggy_contract.functions.claimsAvailable(self.address).call()),self.rounding)
 
     def getBNBbalance(self):
+        """Query the BSC chain for your avail BNB Balance
+        """
         self.BNBbalance = self.w3.eth.getBalance(self.address)
         self.BNBbalance = round(wei2eth(self.BNBbalance),self.rounding)
 
     def checkAvailableBNBBalance(self):
+        """Perform the balance check for BNB and exit if below a certian amount
+        """
         logging.info('BNB Balance is %s' % round(self.BNBbalance,self.rounding))
         if self.min_bnb_balance:  # Do we have a min balance defined?
             if self.BNBbalance < self.min_bnb_balance:
@@ -457,6 +482,12 @@ class PiggyBank:
                 sys.exit()
 
     def sendMessage(self, title_txt, body):
+        """Used to send a pushover notification
+
+        Args:
+            title_txt (str): Pushover notification title
+            body (str): body of the notification
+        """
         if self.pushover_api_key and self.pushover_user_key:
             title_txt = ("%s: %s" % (self.wallet_friendly_name,title_txt) )
             logging.info("PushOver Notification\n\rTitle: %s\n\rBody: %s" % (title_txt,body))
@@ -464,6 +495,8 @@ class PiggyBank:
             Thread(target=self.client.send_message,kwargs={'message': body, 'title': title_txt}).start()
 
     def PushOverClientInit(self):
+        """Initilise the pushover client from the api/user keys in the config file
+        """
         if self.pushover_api_key and self.pushover_user_key:
             self.client = Client(self.pushover_user_key, api_token=self.pushover_api_key)
 
