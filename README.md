@@ -6,7 +6,7 @@ This is automation that I have written for my own personal use. If you choose to
 
 Also never share your ``PRIVATE KEY``. This code has been designed so the private key information does NOT, nor should it sit in the same directory with this automation.
 
-Any information below is my personal view and is not financial advice. Always do your own research and as I say, only invest money you can afford to lose.
+Any information below is my personal view and is not financial advice. Always do your own research and only invest money you can afford to lose.
 
 ## Introduction
 
