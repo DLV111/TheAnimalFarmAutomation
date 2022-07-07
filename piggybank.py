@@ -1,14 +1,15 @@
 from calendar import weekday
+from math import floor
 from web3 import Web3
 import os
 import logging
 import sys
 import time
 import calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pushover import Client
 from utils import eth2wei, prettyPrint, wei2eth, read_json_file, to_checksum, getLocalTime, addNewConfigOption, pancakeswap_api_get_price
-from utils import binance_api_get_price
+from utils import binance_api_get_price, time_until_end_of_day
 import traceback
 import argparse
 import configparser
@@ -30,7 +31,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
-VERSION = '0.5'
+VERSION = '0.7'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -58,76 +59,127 @@ class PiggyBank:
             to_checksum(PIGGYBANK_CONTRACT_ADDR),
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
+        # self.piggybankCount = 1#self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
+        # Add any new PB's into the config file
+        self.updatePiggyConfigFile(self.piggybankCount)
 
-        token0_price_data = pancakeswap_api_get_price(AFP_TOKEN_ADDRESS)
-        # Currently no API to get a specific end pair end point
-        # https://github.com/pancakeswap/pancake-info-api/issues/10
-        pair0_price_data = pancakeswap_api_get_price("",type="pairs")
-
-        # print(token0_price_data)
-        # print(pair0_price_data['data'][AFP_BUSD_PAIR_ADDRESS])
-
-        # print(token1_price_data)
-        # sys.exit(2)
-        # Animal Farm Pigs / BUSD Pool - what truffles pay out in
-        # self.afp_busg = {
-        #     "price": 0,
-        #     "busd_price": 0,
-        #     "busd_reserve": 0,
-        #     "drip_price": 0,
-        #     "drip_reserve": 0,
-        #     "supply": 0,
-        #     "lp_ratio": Decimal(0.0)
-        # }
-
-    def updatePiggyConfigFile(self,pbinfo: dict):
+    def updatePiggyConfigFile(self,pbcount: int):
         """
         This will check your config file to see if all the piggy banks are present and if not add them in
         """
+        pb_num=0
         _parser = configparser.ConfigParser()
-        anyUpdates = False
         config_file = self.config_args['config_file']
         if os.path.exists(config_file):
             _parser.read(config_file)
-        for key,item in pbinfo.items():
-            section = "piggybank_" + str(key)
+        while pb_num < pbcount:
+            section = "piggybank_" + str(pb_num)
             if not _parser.has_section(section):
-                anyUpdates = True
                 day = 0
                 week = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
                 while day < 7:
                     if day == 0:
-                        _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound or claim - if unknown will compound')
+                        _parser = addNewConfigOption(_parser, section, week[day], 'compound  # Options are compound, claim or skip - if unknown will compound')
                     else:
                         _parser = addNewConfigOption(_parser, section, week[day], 'compound')
                     day += 1
-        if anyUpdates:
-            writemsg = "There has been a new piggy bank added to the config. Please review and update. Default action is to compound each day"
-            self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
+                writemsg = "New piggybank (No. %s) has been added to the config. Please review and update. Default action is to compound each day" % pb_num
+                self.writeConfigFile(_parser,writemsg=writemsg,dontexit=True)
+            pb_num += 1
 
     def calculateTruffleSell(self,truffles: int):
+        """Calculate the truffle sell price - currently unused
+
+        Args:
+            truffles (int): Number of truffles used to calculate
+        """
         print (self.piggy_contract.functions.calculateTruffleSell(truffles).call())
         print (wei2eth(self.piggy_contract.functions.calculateTruffleSell(truffles).call()))
 
     def getMyTruffles(self,ID: int):
+        """Query the BSC PB Contract for the number of truffles avail
+
+        Args:
+            ID (int): Piggybank ID to query
+
+        Returns:
+            int: Number of truffles avail to the Piggybank ID
+        """
         return self.piggy_contract.functions.getMyTruffles(ID).call()
 
-    def getNextFeedingTime(self,epochTime: int):
-        """
-        Returns in epoch time the next feeding time (24h from your last action)
-        """
-        return (epochTime+86400)
+    def getDay(self,epoch_time: int):
+        """Get the current day from an epoch time, eg monday, tuesday etc
 
-    def getTimeToNextFeeding(self,epochTime: int):
+        Args:
+            epoch_time (int): Time in epoch
+
+        Returns:
+            string: Day of the week (monday, tuesday etc)
         """
-        Retruns how many seconds until the next piggy bank action
+        return str(calendar.day_name[datetime.fromtimestamp(epoch_time).weekday()]).lower()
+
+    def getNextFeedingTime(self,ID: int, last_action: int):
+        """Returns in epoch time the next action
+
+        Args:
+            ID (int): Piggybank ID
+            last_action (int): epoch time of last action
+
+        Returns:
+            int: epochtime of next action
         """
-        if self.getNextFeedingTime(epochTime) - int(time.time()) < 0:
+        days_to_add=0
+        # Gives us the last action in datetime format (for date calculations)
+        dt_last_action = datetime.fromtimestamp(last_action)
+        # Get the different in days between last action and now
+        last_action_yesterday = datetime.now() - dt_last_action
+        # Create this gives us the last action as if it was yesterday
+        yesterday_action_epoch = (86400 * last_action_yesterday.days) + last_action
+        # Gives us the next action - eg 24 hours ahead from the last action
+        next_action_epoch = yesterday_action_epoch + 86400
+        # Get the day of the next action
+        day = self.getDay(next_action_epoch)
+        while True:
+            # If today is skip, then add 24 hours and check if its skip again
+            if self.config['piggybank_' + str(ID)][day] == "skip":
+                # Need to calculate if today's time has passed, then we don't want to add 1 day
+                next_action_epoch = next_action_epoch+86400
+                # this is just to capture the break days bit
+                days_to_add+=1
+                day = self.getDay(next_action_epoch)
+            else:
+                break
+            # if its all skip's this breaks the loop
+            if (days_to_add >= 7):
+                break
+        yesterday = self.getDay(yesterday_action_epoch)
+        # If yesterday was anything but skip and this is true, the action in the last 24 hours failed to happen, so do it now!
+        if last_action_yesterday.days > 0 and self.config['piggybank_' + str(ID)][yesterday] != "skip":
+            # print(f"Yesterday action {yesterday} for {ID}  was.. - {self.config['piggybank_' + str(ID)][yesterday]}")
+            next_action_epoch = yesterday_action_epoch
+        return (next_action_epoch)
+
+    def getNextAction(self, ID: int, next_action: int):
+        """Return the next action for the piggy bank
+
+        Args:
+            ID (int): ID of the piggybank
+            next_action (int): time in epoch of the next action
+        """
+        date_time_obj = datetime.strptime(getLocalTime(next_action), '%Y-%m-%d %H:%M:%S')
+        day = str(calendar.day_name[date_time_obj.weekday()]).lower()
+        return (self.config['piggybank_' + str(ID)][day])
+
+    def getTimeToNextFeeding(self,ID: int, epochTime: int):
+        """
+        Re-runs how many seconds until the next piggy bank action
+        """
+        if self.getNextFeedingTime(ID, epochTime) - int(time.time()) < 0:
             return 0
         else:
-            return (self.getNextFeedingTime(epochTime) - int(time.time()))
+            return (self.getNextFeedingTime(ID, epochTime) - int(time.time()))
 
 
     def myPiggyBankDetails(self):
@@ -135,10 +187,12 @@ class PiggyBank:
         Builds a dict of every piggybank you have on the platform
         """
         pbinfo = self.piggyBankInfo()
+        self.config = self.readInConfig()  # Always read in the latest config when we get the details
         self.my_piggybank = {} # This is an internal dict which contains all the info I need
         for pb in pbinfo:
             _ID = pb[0]
             currentTruffles = self.getMyTruffles(_ID)
+            _nextFeedingTime = self.getNextFeedingTime(_ID, pb[4])
             self.my_piggybank.update({
                 _ID: {
                     "raw": pb,
@@ -151,8 +205,9 @@ class PiggyBank:
                     "trufflesUsed": pb[6],
                     "trufflesSold": pb[7],
                     "isMaxPayOut": pb[8],
-                    "nextFeeding": self.getNextFeedingTime(pb[4]),
-                    "timeToNextFeeding": self.getTimeToNextFeeding(pb[4]),
+                    "nextFeeding": _nextFeedingTime,
+                    "timeToNextFeeding": self.getTimeToNextFeeding(_ID, pb[4]),
+                    "nextAction": self.getNextAction(_ID, _nextFeedingTime),
                     "currentTruffles": currentTruffles,
                 }
             })
@@ -177,7 +232,7 @@ class PiggyBank:
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400 # Max of 1 day, but will be reduced as soon as this is run
+        _farmerSleepTime = 86400 # Max of 1 day, but may be reduced as soon as this is run
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -188,6 +243,8 @@ class PiggyBank:
                     _msg = "Claiming the pigs - piggy bank number: %s - truffles: %s" % (key,self.my_piggybank[key]['currentTruffles'])
                     logging.info (_msg)
                     self.feedOrClaim(key,action=actionForToday)
+                elif actionForToday == "skip":
+                    logging.info ("skipping piggy bank %s" % key)
                 else:
                     _msg = "Feeding the pigs - piggy bank number: %s" % key
                     logging.info(_msg)
@@ -198,19 +255,16 @@ class PiggyBank:
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
-        # This makes sure we get the absolute accurate time to start to perform the next function
-        _farmerSleepTime = self.getTimeToNextFeeding(pbinfo[self.nextPiggyBankFeedID]['lastFeeding'])
-        if _farmerSleepTime > 5:
-            _farmerSleepTime = _farmerSleepTime-5  # Drop 5 seconds as there is a delay somewhere!
-        logging.info("I will sleep for %s - Next action for piggybank %s is at %s" % (_farmerSleepTime, self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
+        _farmerSleepTime = floor(_nextFeedTime-time.time())
+        logging.info("I will sleep for %s - Next action(%s) for piggybank %s is at %s" % (_farmerSleepTime, pbinfo[self.nextPiggyBankFeedID]['nextAction'], self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
     def feedOrClaim(self,ID:int,action:str="compound"):
         """
         Performs the contract call
-        
+
         ID: the ID of your piggybank to perform the action again
-        
+
         action: default is compound, other is claim
         """
         logging.info("Performing action %s in function feedOrClaim" % action)
@@ -272,6 +326,11 @@ class PiggyBank:
             logging.info(tx)
 
     def piggyBankInfo(self):
+        """Talk to BSC to get the piggy bank information
+
+        Returns:
+            dict: All the information about the piggy banks you have
+        """
         _piggyBankInfo = []
         for x in range(self.piggybankCount):
             _piggyBankInfo.append (self.piggy_contract.functions.piggyBankInfo(self.address,x).call())
@@ -279,6 +338,8 @@ class PiggyBank:
 
 
     def validateConfig(self):
+        """Validate the config you have in place works as expected
+        """
         if self.private_key == "":
             logging.info("private_key is not set")
             sys.exit(1)
@@ -304,10 +365,16 @@ class PiggyBank:
             self.pushover_user_key = False
 
     def readInConfig(self):
+        """Reads in the config file and all option
+        if things are missing it will add them in
+
+        Returns:
+            ConfigParser: Returns all the config from the file
+        """
         config_file = self.config_file
         if self.config_args['new_config'] == True:
             self.createDefaultConfig(config_file)
-        else: 
+        else:
             try:
                 config = configparser.ConfigParser({'min_bnb_balance': False, 'pushover_api_key': False, 'pushover_user_key': False}, inline_comment_prefixes="#")
                 config.read(config_file)
@@ -329,10 +396,15 @@ class PiggyBank:
                 sys.exit(2)
 
     def createDefaultConfig(self, config_file):
+        """Creates the default config for the configuration file
+
+        Args:
+            config_file (str): Path to the config file to write
+        """
         _parser = configparser.ConfigParser()
         if os.path.exists(config_file):
             _parser.read(config_file)
-        
+
         # defaults
         _parser = addNewConfigOption(_parser, 'default', 'private_key', '  # Mandatory - gives write access to your wallet KEEP THIS SECRET!!')
         _parser = addNewConfigOption(_parser, 'default', 'wallet_friendly_name', 'Test Wallet  # Mandatory - Friendly name to display in output')
@@ -343,10 +415,17 @@ class PiggyBank:
         _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries', '2  # Number of retries on a transaction failure - will cost gas each time. 2 means try once more if there is a failure.')
         _parser = addNewConfigOption(_parser, 'piggybank', 'max_tries_delay', '30  # Seconds between retries on a transaction failure. Wait this long before trying again.')
         _parser = addNewConfigOption(_parser, 'piggybank', 'min_bnb_balance', '0.02  # Optional -  Min BNB Balance to have in your wallet to allow compounding action')
-        
+
         self.writeConfigFile(_parser)
 
     def writeConfigFile(self,parser,dontexit=False,writemsg=False):
+        """If theres a new piggy bank update the config dynmically
+
+        Args:
+            parser (_type_): _description_
+            dontexit (bool, optional): If the code should exit on a new PB Defaults to False.
+            writemsg (bool, optional): Write a message to the logs if a new PB has been added. Defaults to False.
+        """
         config_file = self.config_args['config_file']
         try:
             with open(config_file, "w") as f:
@@ -363,12 +442,14 @@ class PiggyBank:
 
 
     def argparser(self):
+        """Gets the arguments from the CLI when you launch the python code
+        """
         import textwrap
         description = textwrap.dedent('''
             Piggy Bank Compounding
 
             You can use this script to compound your piggy bank's every 24h
-            See the readme at https://github.com/DLV111/TheAnimalFarmAutomations for more details.
+            See the readme at https://github.com/DLV111/TheAnimalFarmAutomation for more details.
             If you like this please consider buying me a beer/coffee
         ''')
         parser = argparse.ArgumentParser(description=description,
@@ -379,13 +460,19 @@ class PiggyBank:
         return(vars(args))
 
     def getAvailableClaims(self):
+        """Query the BSC Chain/PB contract for the avail claims
+        """
         self.claimsAvailable = round(wei2eth(self.piggy_contract.functions.claimsAvailable(self.address).call()),self.rounding)
 
     def getBNBbalance(self):
+        """Query the BSC chain for your avail BNB Balance
+        """
         self.BNBbalance = self.w3.eth.getBalance(self.address)
         self.BNBbalance = round(wei2eth(self.BNBbalance),self.rounding)
 
     def checkAvailableBNBBalance(self):
+        """Perform the balance check for BNB and exit if below a certian amount
+        """
         logging.info('BNB Balance is %s' % round(self.BNBbalance,self.rounding))
         if self.min_bnb_balance:  # Do we have a min balance defined?
             if self.BNBbalance < self.min_bnb_balance:
@@ -395,6 +482,12 @@ class PiggyBank:
                 sys.exit()
 
     def sendMessage(self, title_txt, body):
+        """Used to send a pushover notification
+
+        Args:
+            title_txt (str): Pushover notification title
+            body (str): body of the notification
+        """
         if self.pushover_api_key and self.pushover_user_key:
             title_txt = ("%s: %s" % (self.wallet_friendly_name,title_txt) )
             logging.info("PushOver Notification\n\rTitle: %s\n\rBody: %s" % (title_txt,body))
@@ -402,23 +495,35 @@ class PiggyBank:
             Thread(target=self.client.send_message,kwargs={'message': body, 'title': title_txt}).start()
 
     def PushOverClientInit(self):
+        """Initilise the pushover client from the api/user keys in the config file
+        """
         if self.pushover_api_key and self.pushover_user_key:
             self.client = Client(self.pushover_user_key, api_token=self.pushover_api_key)
 
 def main():
+    """The main function which calls all the classes/functions
+    """
     # Setup logger.
     log_format = '%(asctime)s: %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
-    logging.info('Feeding pigs automation v%s Started!' % VERSION)
+    logging.info('Feeding pigs automation v%s Started!',VERSION)
     logging.info('----------------')
 
     piggybank = PiggyBank()
+    pbinfo = piggybank.myPiggyBankDetails()
+
+    logging.info("These are the next startup actions. These actions dynamically change as time goes on. This only shows you 'now'")
+    for key,item in pbinfo.items():
+        logging.info("ID: %s - %s - %s",key,getLocalTime(item['nextFeeding']), item['nextAction'])
 
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
-        piggybank.updatePiggyConfigFile(pbinfo)
-        # Loop through all the returned piggy banks to either sleep or compound
+        ## Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
+        ## If you uncoment this bit to display the next actions on every action
+        ## note that the latest piggybank "feed/claim" action will not have the latest time shown
+        # for key,item in pbinfo.items():
+            # logging.info("ID: %s - %s - %s",key,getLocalTime(item['nextFeeding']), item['nextAction'])
         time.sleep(sleep_time)
 
 if __name__ == "__main__":

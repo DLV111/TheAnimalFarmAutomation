@@ -5,6 +5,7 @@ import logging
 import traceback
 import requests
 import time
+import datetime
 
 def wei2eth(wei, unit="ether"):
     return Web3.fromWei(wei, unit)
@@ -38,13 +39,13 @@ def is_percent_down(previous_amount, current_amount, percent_down):
         return True
     else:
         return False
-    
+
 def is_percent_up(previous_amount, current_amount, percent_up):
     if current_amount - previous_amount > Decimal(previous_amount) * (Decimal(percent_up) / Decimal(100)):
         return True
     else:
         return False
-    
+
 def pancakeswap_api_get_price(token_address, max_tries=1, type="tokens"):
     # response example: {"updated_at":1644451690368,"data":{"name":"USD Coin","symbol":"USDC","price":"0.999362623429255457703972330882","price_BNB":"0.002364980172183089994929542565945"}}
     for _ in range(max_tries):
@@ -91,3 +92,8 @@ def prettyPrint(data):
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(data)
+
+def time_until_end_of_day(dt=None):
+    if dt is None:
+        dt = datetime.datetime.now()
+    return ((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second)

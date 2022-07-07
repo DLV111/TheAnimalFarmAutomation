@@ -1,0 +1,19 @@
+---
+version: "3.9"
+services:
+  af_piggybank:
+    image: dlv111/crypto-web3:latest
+    volumes:
+      - /PATH/TO/YOUR/config.ini:/config/config.ini
+      - /PATH/TO/TheAnimalFarmAutomation/:/usr/src/myapp
+    command: python piggybank.py /config/config.ini
+    restart: on-failure
+# If you wish to build the container locally then you can use this bit
+  # af_piggybank_local:
+  #   image: crypto-web3-local
+  #   build: ./crypto-web3
+  #   volumes:
+  #     - /PATH/TO/YOUR/CONFIG/FILE:/config/config.ini
+  #     - /PATH/TO/TheAnimalFarmAutomation/:/usr/src/myapp
+  #   command: python piggybank.py /config/config.ini
+  #   restart: on-failure
