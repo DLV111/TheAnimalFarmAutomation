@@ -2,6 +2,7 @@
 version: "3.9"
 services:
   af_piggybank:
+    container_name: af_piggybank
     image: dlv111/crypto-web3:latest
     volumes:
       - /PATH/TO/YOUR/config.ini:/config/config.ini
@@ -10,6 +11,7 @@ services:
     restart: on-failure
 # If you wish to build the container locally then you can use this bit
   # af_piggybank_local:
+  #   container_name: af_piggybank
   #   image: crypto-web3-local
   #   build: ./crypto-web3
   #   volumes:
