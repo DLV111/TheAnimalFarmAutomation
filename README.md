@@ -18,9 +18,9 @@ I spent many hours working on this and making it user friendly, if you appreciat
 
 When you run this program for the very first time you need to create the config file.
 
-If you already use my drip automation located here https://github.com/DLV111/DripCompound then you can use th same config file, just make sure you back it up first before running for the first time.
+If you already use my drip automation located here https://github.com/DLV111/DripCompound then you can use the same config file, just make sure you back it up first before running for the first time.
 
-This will create the template file in /tmp/my_config.ini - As mentioned if you already use the drip wallet, it should justdd in the piggybank sections
+This will create the template file in /tmp/my_config.ini - As mentioned if you already use the drip wallet, it should just add in the piggybank sections
 
 ``` bash
 $ docker run --rm -ti -v /tmp/:/config/ -v "$PWD":/usr/src/myapp dlv111/crypto-web3:latest python piggybank.py -n /config/my_config.ini
@@ -48,7 +48,7 @@ min_bnb_balance = 0.02  # Optional -  Min BNB Balance to have in your wallet to 
 
 ## Running the piggybank automation
 
-After you have done your configuration, you can now run the automation. If running from docker review the file ``docker-compose.piggybank.yml`` my recommendation is to copy thi file outside of the git repo, and update the volumes to point to the required files. If you wish to build the docker files locally then uncomment the relevant section.
+After you have done your configuration, you can now run the automation. If running from docker review the file ``docker-compose.piggybank.yml`` my recommendation is to copy this file outside of the git repo, and update the volumes to point to the required files. If you wish to build the docker files locally then uncomment the relevant section.
 
 When you are ready, run this. If you omit the ``-d``, you will see all your output on the screen.
 
@@ -61,7 +61,7 @@ As soon as it runs, it will further populate the configuration file with every p
 Any combination is possible, default is all compounds.
 
 ---
-**_NOTE:_** The action of the each piggybank is read just before each action, so there is no need to restart the program on updating the actions.
+**_NOTE:_** The action of the each piggybank is read just before each action, so there is no need to restart the program on updating the config file.
 
 ---
 
@@ -89,4 +89,4 @@ docker logs -f CONTAINER_NAME --tail=30
 
 1. If you'd like to donate some $$ please do so to this address (BNB/BUSD) please!
 2. If you are considering signing up to drip/animal farm jump into our telegram channel https://t.me/flowriders and mention that @Zobah111 sent you. The team has some great sign up bonuses and is a helpful and friendly group.
-3. Credefi is an upcoming lending group which performs lending for real-economy projects. They provide returns between 10% and 40% on stable coins (you choose your risk). If you are looking for a place to diversify your stable coin investments and decide to use this platform, please use my referral link ``https://platform.credefi.finance/l/5rnhyju``
+3. Credefi is an upcoming lending group which performs lending for real-economy projects. They provide returns between 10% and 40% on stable coins (you choose your risk). If you are looking for a place to diversify your stable coin investments and decide to use this platform, please use my referral link [https://platform.credefi.finance/l/5rnhyju](https://platform.credefi.finance/l/5rnhyju)
