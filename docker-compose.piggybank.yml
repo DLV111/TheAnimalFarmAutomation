@@ -7,6 +7,7 @@ services:
     volumes:
       - /PATH/TO/YOUR/config.ini:/config/config.ini
       - /PATH/TO/TheAnimalFarmAutomation/:/usr/src/myapp
+      - /etc/localtime:/etc/localtime
     command: python piggybank.py /config/config.ini
     restart: on-failure
 # If you wish to build the container locally then you can use this bit
@@ -17,5 +18,6 @@ services:
   #   volumes:
   #     - /PATH/TO/YOUR/CONFIG/FILE:/config/config.ini
   #     - /PATH/TO/TheAnimalFarmAutomation/:/usr/src/myapp
+  #     - /etc/localtime:/etc/localtime
   #   command: python piggybank.py /config/config.ini
   #   restart: on-failure
