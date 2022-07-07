@@ -2,9 +2,11 @@
 
 ## Disclaimer
 
-This is automation that I have written for my own personal use. If you chose to use this, then I take no responsibility for errors etc.
+This is automation that I have written for my own personal use. If you choose to use this, then I take no responsibility for errors etc.
 
 Also never share your ``PRIVATE KEY``. This code has been designed so the private key information does NOT, nor should it sit in the same directory with this automation.
+
+Any information below is my personal view and is not financial advice. Always do your own research and as I say, only invest money you can afford to lose.
 
 ## Introduction
 
@@ -84,8 +86,6 @@ docker logs -f CONTAINER_NAME --tail=30
 ```
 
 ## Donations/Referrals
-
-Any information below is my personal view and is not finanical advice. Always do your own research and as I say, only invest money you can afford to lose.
 
 1. If you'd like to donate some $$ please do so to this address (BNB/BUSD) please!
 2. If you are considering signing up to drip/animal farm jump into our telegram channel https://t.me/flowriders and mention that @Zobah111 sent you. The team has some great sign up bonuses and is a helpful and friendly group.
