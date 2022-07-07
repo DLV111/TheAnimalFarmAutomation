@@ -53,7 +53,9 @@ After you have done your configuration, you can now run the automation. If runni
 When you are ready, run this. If you omit the ``-d``, you will see all your output on the screen.
 
 ``` bash
-docker-compose -f docker-compose.piggybank.yml up -d
+$ docker-compose -f docker-compose.piggybank.yml up -d
+Creating network "theanimalfarmautomation_default" with the default driver
+Creating af_piggybank ... done
 ```
 
 As soon as it runs, it will further populate the configuration file with every piggybank it sees, and you can then update it as required.
