@@ -1,9 +1,0 @@
----
-version: "3.9"
-services:
-    af_piggybank:
-        image: dlv111/crypto-web3:latest
-    volumes:
-        - LOCAL_PATH_TO_CONFIG:/config/config.ini
-        - .:/usr/src/myapp
-    command: python piggybank.py /config/config.ini
