@@ -449,7 +449,7 @@ class PiggyBank:
             Piggy Bank Compounding
 
             You can use this script to compound your piggy bank's every 24h
-            See the readme at https://github.com/DLV111/TheAnimalFarmAutomations for more details.
+            See the readme at https://github.com/DLV111/TheAnimalFarmAutomation for more details.
             If you like this please consider buying me a beer/coffee
         ''')
         parser = argparse.ArgumentParser(description=description,
