@@ -2,6 +2,7 @@
 version: "3.9"
 services:
   af_piggybank:
+    container_name: af_piggybank
     image: dlv111/crypto-web3:latest
     volumes:
       - /PATH/TO/YOUR/config.ini:/config/config.ini

@@ -82,7 +82,7 @@ If you don't know normal docker commands your friend is..
 
 ``` bash
 docker ps # to get container names
-docker logs -f CONTAINER_NAME --tail=30
+docker logs -f af_piggybank --tail=30
 ```
 
 ## Donations/Referrals
