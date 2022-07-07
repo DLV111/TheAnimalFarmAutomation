@@ -501,10 +501,12 @@ class PiggyBank:
             self.client = Client(self.pushover_user_key, api_token=self.pushover_api_key)
 
 def main():
+    """The main function which calls all the classes/functions
+    """
     # Setup logger.
     log_format = '%(asctime)s: %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
-    logging.info('Feeding pigs automation v%s Started!' % VERSION)
+    logging.info('Feeding pigs automation v%s Started!',VERSION)
     logging.info('----------------')
 
     piggybank = PiggyBank()
@@ -512,15 +514,16 @@ def main():
 
     logging.info("These are the next startup actions. These actions dynamically change as time goes on. This only shows you 'now'")
     for key,item in pbinfo.items():
-        logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
-    # sys.exit(1)
+        logging.info("ID: %s - %s - %s",key,getLocalTime(item['nextFeeding']), item['nextAction'])
 
     while True:
         pbinfo = piggybank.myPiggyBankDetails()
-        # Loop through all the returned piggy banks to either sleep or compound
+        ## Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-        for key,item in pbinfo.items():
-            logging.info("ID: %s - %s - %s" % (key, getLocalTime(item['nextFeeding']), item['nextAction']))
+        ## If you uncoment this bit to display the next actions on every action note
+        ## that the latest piggybank "feed/claim" action will not have the latest time shown
+        # for key,item in pbinfo.items():
+            # logging.info("ID: %s - %s - %s",key,getLocalTime(item['nextFeeding']), item['nextAction'])
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
