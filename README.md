@@ -89,4 +89,4 @@ docker logs -f CONTAINER_NAME --tail=30
 
 1. If you'd like to donate some $$ please do so to this address (BNB/BUSD) please!
 2. If you are considering signing up to drip/animal farm jump into our telegram channel https://t.me/flowriders and mention that @Zobah111 sent you. The team has some great sign up bonuses and is a helpful and friendly group.
-3. Credefi is an upcoming lending group which performs lending for real-economy projects. They provide returns between 10% and 40% on stable coins (you choose your risk). If you are looking for a place to diversify your stable coin investments and decide to use this platform, please use my referral link [https://platform.credefi.finance/l/5rnhyju](https://platform.credefi.finance/l/5rnhyju)
+3. [Credefi](https://credefi.finance/) is an upcoming lending group which performs lending for real-economy projects. They provide returns between 10% and 40% on stable coins (you choose your risk). If you are looking for a place to diversify your stable coin investments and decide to use this platform, please use my referral link [https://platform.credefi.finance/l/5rnhyju](https://platform.credefi.finance/l/5rnhyju)
