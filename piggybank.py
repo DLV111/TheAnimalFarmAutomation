@@ -520,8 +520,8 @@ def main():
         pbinfo = piggybank.myPiggyBankDetails()
         ## Loop through all the returned piggy banks to either sleep or compound
         sleep_time = piggybank.feedOrSleepOrClaim(pbinfo)
-        ## If you uncoment this bit to display the next actions on every action note
-        ## that the latest piggybank "feed/claim" action will not have the latest time shown
+        ## If you uncoment this bit to display the next actions on every action
+        ## note that the latest piggybank "feed/claim" action will not have the latest time shown
         # for key,item in pbinfo.items():
             # logging.info("ID: %s - %s - %s",key,getLocalTime(item['nextFeeding']), item['nextAction'])
         time.sleep(sleep_time)

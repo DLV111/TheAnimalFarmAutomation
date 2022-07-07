@@ -7,7 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir /config
 
+WORKDIR /usr/src/myapp
+
 CMD [ "python" ]
 
-# docker build -f dockerfile -t crypto_web3:1.0 .
-# docker run -it --name af_piggybank -v /path/to/config.ini:/config/config.ini -v "$PWD":/usr/src/myapp -w /usr/src/myapp crytpo_web3:1.0 python piggybank.py /config/config.ini
+# docker build -f dockerfile -t crypto-web3:1.0 .
+# docker run -it --name af_piggybank -v /path/to/config.ini:/config/config.ini -v "$PWD":/usr/src/myapp crytpo-web3:1.0 python piggybank.py /config/config.ini
