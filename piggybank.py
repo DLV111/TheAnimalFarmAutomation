@@ -256,6 +256,8 @@ class PiggyBank:
                     self.nextPiggyBankFeedID = key
 
         _farmerSleepTime = floor(_nextFeedTime-time.time())
+        if _farmerSleepTime <= 0:
+            _farmerSleepTime = 0
         logging.info("I will sleep for %s - Next action(%s) for piggybank %s is at %s" % (_farmerSleepTime, pbinfo[self.nextPiggyBankFeedID]['nextAction'], self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
