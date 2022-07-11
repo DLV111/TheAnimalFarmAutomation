@@ -14,9 +14,19 @@ This is to automate the daily compounding or claiming of the piggy bank for the 
 
 I spent many hours working on this and making it user friendly, if you appreciate my work and it has saved you some time please consider a donation - See end of this readme.
 
+If you do run into problems please raise an issuse against this repo, and if you want to chat to me please reach out on telegram https://t.me/Zobah111 and I will reply when I can.
+
+## Prerequisites
+
+* Somewhere to run this automation - while you can run it manually and it will compound stuff if missed in the last 24 hours, it is much better to run it all the time. Invest in a raspberry Pi 4, or some cloud compute.
+* Docker - Here is a comprehensive guide to set it up, and a direct link to setting up your computer. If you get the "hello world" demo working, then this automation will run fine.
+   * https://docker-curriculum.com/#setting-up-your-computer
+* docker-compose - while not 100% required if you have knowlege around running docker manually - running it under docker-compose will make it much easier for you if you are a beginner (eg use the file I've created)
+   * https://docs.docker.com/compose/install/
+
 ## Running for the first time
 
-When you run this program for the very first time you need to create the config file.
+When you run this program for the very first time you need to create the config file. The below is all for a Linux OS, if you are running in windows you may need to update the paths.
 
 If you already use my drip automation located here https://github.com/DLV111/DripCompound then you can use the same config file, just make sure you back it up first before running for the first time.
 
@@ -90,5 +100,5 @@ docker logs -f af_piggybank --tail=30
 ## Donations/Referrals
 
 1. If you'd like to donate some $$ please do so to this address (BNB/BUSD) please! ``0xfdb5550aa2145573cf878e6e90e061c611d170b8``
-2. If you are considering signing up to drip/animal farm jump into our telegram channel https://t.me/flowriders and mention that @Zobah111 sent you. The team has some great sign up bonuses and is a helpful and friendly group.
+2. If you are considering signing up to drip/animal farm jump into our telegram channel https://t.me/flowriders and mention that https://t.me/Zobah111 sent you. The team has some great sign up bonuses and is a helpful and friendly group.
 3. [Credefi](https://credefi.finance/) is an upcoming lending group which performs lending for real-economy projects. They provide returns between 10% and 40% on stable coins (you choose your risk). If you are looking for a place to diversify your stable coin investments and decide to use this platform, please use my referral link [https://platform.credefi.finance/l/5rnhyju](https://platform.credefi.finance/l/5rnhyju)
