@@ -34,6 +34,8 @@ This will create the template file in /tmp/my_config.ini - As mentioned if you a
 
 Note: You will only modify paths to the left of the ``:`` like /tmp, $PWD (which is a short cut to my current directory in linux). Everything to the right is inside the container so don't change!
 
+Make sure this is run inside the folder where piggybank.py is.
+
 ``` bash
 $ docker run --rm -ti -v /tmp/:/config/ -v "$PWD":/usr/src/myapp dlv111/crypto-web3:latest python piggybank.py -n /config/my_config.ini
 2022-07-07 11:33:48,231: Feeding pigs automation v0.7 Started!
@@ -99,7 +101,7 @@ If you don't know normal docker commands your friend is..
 ``` bash
 docker ps # to get container names
 docker logs -f af_piggybank --tail=30
-docker restart af_piggybank # If you need to restart the container for some reason, generally only reuqired on a code update or modificiation of the common sections (eg [default], [piggybank]). Restart is not required on change of action.
+docker restart af_piggybank # If you need to restart the container for some reason, generally only required on a code update or modificiation of the common sections (eg [default], [piggybank]). Restart is not required on change of action.
 ```
 
 ## Donations/Referrals
