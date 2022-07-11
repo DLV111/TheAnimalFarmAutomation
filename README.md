@@ -79,7 +79,7 @@ As soon as it runs, it will further populate the configuration file with every p
 Any combination is possible, default is all compounds.
 
 ---
-**_NOTE:_** The action of the each piggybank is read just before each action, so there is no need to restart the program on updating the config file.
+**_NOTE:_** The action of the each piggybank [piggybank_x] is read just before each action, so there is no need to restart the program on updating the config file.
 
 ---
 
