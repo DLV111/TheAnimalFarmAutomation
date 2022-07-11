@@ -32,6 +32,8 @@ If you already use my drip automation located here https://github.com/DLV111/Dri
 
 This will create the template file in /tmp/my_config.ini - As mentioned if you already use the drip wallet, it should just add in the piggybank sections
 
+Note: You will only modify paths to the left of the ``:`` like /tmp, $PWD (which is a short cut to my current directory in linux). Everything to the right is inside the container so don't change!
+
 ``` bash
 $ docker run --rm -ti -v /tmp/:/config/ -v "$PWD":/usr/src/myapp dlv111/crypto-web3:latest python piggybank.py -n /config/my_config.ini
 2022-07-07 11:33:48,231: Feeding pigs automation v0.7 Started!
@@ -58,9 +60,11 @@ min_bnb_balance = 0.02  # Optional -  Min BNB Balance to have in your wallet to 
 
 ## Running the piggybank automation
 
-After you have done your configuration, you can now run the automation. If running from docker review the file ``docker-compose.piggybank.yml`` my recommendation is to copy this file outside of the git repo, and update the volumes to point to the required files. If you wish to build the docker files locally then uncomment the relevant section.
+After you have done your configuration, you can now run the automation. If running from docker review the file ``docker-compose.piggybank.yml`` my recommendation is to copy this file outside of the git repo, and update the volumes to point to the required files. If you wish to build the docker files locally then uncomment the relevant section. 
 
-When you are ready, run this. If you omit the ``-d``, you will see all your output on the screen.
+The /etc/localtime bit ensure all the dates/times presented to you are in your timezone as the container by default will run in UTC. If you see dates/times that look weird check the timezones and see if they make more sense by converting that date/time from UTC -> your local time.
+
+When you are ready, run this. If you omit the ``-d``, you will see all your output on the screen. The -d stands for daemon mode, eg run in the background.
 
 ``` bash
 $ docker-compose -f docker-compose.piggybank.yml up -d
@@ -95,6 +99,7 @@ If you don't know normal docker commands your friend is..
 ``` bash
 docker ps # to get container names
 docker logs -f af_piggybank --tail=30
+docker restart af_piggybank # If you need to restart the container for some reason, generally only reuqired on a code update or modificiation of the common sections (eg [default], [piggybank]). Restart is not required on change of action.
 ```
 
 ## Donations/Referrals
