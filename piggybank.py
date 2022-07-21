@@ -255,6 +255,7 @@ class PiggyBank:
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
+        logging.info("next feed time is: %s - %s", _nextFeedTime, time.time())
         _farmerSleepTime = floor(_nextFeedTime-time.time())
         if _farmerSleepTime <= 0:
             _farmerSleepTime = 0
