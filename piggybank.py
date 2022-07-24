@@ -166,6 +166,7 @@ class PiggyBank:
         logging.debug("yesterday: %s", yesterday)
         # If yesterday was anything but skip and this is true, the action in the last 24 hours failed to happen, so do it now!
         if last_action_yesterday.days > 0 and self.config['piggybank_' + str(ID)][yesterday] != "skip":
+            logging.debug("Last action failed or not completed, lets try to do something now!")
             # print(f"Yesterday action {yesterday} for {ID}  was.. - {self.config['piggybank_' + str(ID)][yesterday]}")
             next_action_epoch = yesterday_action_epoch
             logging.debug("next_action_epoch: %s", next_action_epoch)
