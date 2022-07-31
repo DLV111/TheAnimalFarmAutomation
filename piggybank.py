@@ -244,7 +244,7 @@ class PiggyBank:
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400 # Max of 1 day, but may be reduced as soon as this is run
+        _farmerSleepTime = 86400 # Will be updated as soon as it hits the below
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -262,12 +262,16 @@ class PiggyBank:
                     logging.info(_msg)
                     self.feedOrClaim(key)
             else:
-                if nextFeed < _farmerSleepTime:
+                if nextFeed < _farmerSleepTime or _nextFeedTime == "":
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
-        logging.info("next feed time is: %s - %s", _nextFeedTime, time.time())
+        if _nextFeedTime == "":
+            logging.error("ERROR: next feed time is: %s - %s", _nextFeedTime, time.time())
+            logging.error("ERROR: Something went wrong, and the _nextFeedTime isn't set - We will sleep for 5 mins and try again")
+            logging.error("ERROR: Please report this error if you wish to help troubleshoot it")
+            return(300)
         _farmerSleepTime = floor(_nextFeedTime-time.time())
         if _farmerSleepTime <= 0:
             _farmerSleepTime = 0
@@ -520,7 +524,7 @@ def main():
     """
     # Setup logger.
     log_format = '%(asctime)s: %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=log_format, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
     logging.info('Feeding pigs automation v%s Started!',VERSION)
     logging.info('----------------')
 
