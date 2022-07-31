@@ -1,4 +1,5 @@
 from calendar import weekday
+from distutils.debug import DEBUG
 from math import floor
 from web3 import Web3
 import os
@@ -130,22 +131,29 @@ class PiggyBank:
         Returns:
             int: epochtime of next action
         """
+        logging.debug("ID: %s, last_action: %s", ID, last_action)
         days_to_add=0
         # Gives us the last action in datetime format (for date calculations)
         dt_last_action = datetime.fromtimestamp(last_action)
+        logging.debug("dt_last_action: %s", dt_last_action)
         # Get the different in days between last action and now
         last_action_yesterday = datetime.now() - dt_last_action
+        logging.debug("last_action_yesterday: %s", last_action_yesterday)
         # Create this gives us the last action as if it was yesterday
         yesterday_action_epoch = (86400 * last_action_yesterday.days) + last_action
+        logging.debug("yesterday_action_epoch: %s", yesterday_action_epoch)
         # Gives us the next action - eg 24 hours ahead from the last action
         next_action_epoch = yesterday_action_epoch + 86400
+        logging.debug("next_action_epoch: %s", next_action_epoch)
         # Get the day of the next action
         day = self.getDay(next_action_epoch)
+        logging.debug("day: %s", day)
         while True:
             # If today is skip, then add 24 hours and check if its skip again
             if self.config['piggybank_' + str(ID)][day] == "skip":
                 # Need to calculate if today's time has passed, then we don't want to add 1 day
                 next_action_epoch = next_action_epoch+86400
+                logging.debug("next_action_epoch: %s" , next_action_epoch)
                 # this is just to capture the break days bit
                 days_to_add+=1
                 day = self.getDay(next_action_epoch)
@@ -155,10 +163,14 @@ class PiggyBank:
             if (days_to_add >= 7):
                 break
         yesterday = self.getDay(yesterday_action_epoch)
+        logging.debug("yesterday: %s", yesterday)
         # If yesterday was anything but skip and this is true, the action in the last 24 hours failed to happen, so do it now!
         if last_action_yesterday.days > 0 and self.config['piggybank_' + str(ID)][yesterday] != "skip":
+            logging.debug("Last action failed or not completed, lets try to do something now!")
             # print(f"Yesterday action {yesterday} for {ID}  was.. - {self.config['piggybank_' + str(ID)][yesterday]}")
             next_action_epoch = yesterday_action_epoch
+            logging.debug("next_action_epoch: %s", next_action_epoch)
+        logging.debug("We are returning... %s", next_action_epoch)
         return (next_action_epoch)
 
     def getNextAction(self, ID: int, next_action: int):
@@ -232,7 +244,7 @@ class PiggyBank:
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400 # Max of 1 day, but may be reduced as soon as this is run
+        _farmerSleepTime = 86400 # Will be updated as soon as it hits the below
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -250,11 +262,16 @@ class PiggyBank:
                     logging.info(_msg)
                     self.feedOrClaim(key)
             else:
-                if nextFeed < _farmerSleepTime:
+                if nextFeed < _farmerSleepTime or _nextFeedTime == "":
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
+        if _nextFeedTime == "":
+            logging.error("ERROR: next feed time is: %s - %s", _nextFeedTime, time.time())
+            logging.error("ERROR: Something went wrong, and the _nextFeedTime isn't set - We will sleep for 5 mins and try again")
+            logging.error("ERROR: Please report this error if you wish to help troubleshoot it")
+            return(300)
         _farmerSleepTime = floor(_nextFeedTime-time.time())
         if _farmerSleepTime <= 0:
             _farmerSleepTime = 0
