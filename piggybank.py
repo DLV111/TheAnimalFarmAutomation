@@ -138,13 +138,11 @@ class PiggyBank:
         logging.debug("dt_last_action: %s", dt_last_action)
         # Get the different in days between last action and now
         last_action_yesterday = datetime.now() - dt_last_action
-        logging.debug("last_action_yesterday: %s", last_action_yesterday)
         # Create this gives us the last action as if it was yesterday
         yesterday_action_epoch = (86400 * last_action_yesterday.days) + last_action
         logging.debug("yesterday_action_epoch: %s", yesterday_action_epoch)
         # Gives us the next action - eg 24 hours ahead from the last action
         next_action_epoch = yesterday_action_epoch + 86400
-        logging.debug("next_action_epoch: %s", next_action_epoch)
         # Get the day of the next action
         day = self.getDay(next_action_epoch)
         logging.debug("day: %s", day)
@@ -169,7 +167,6 @@ class PiggyBank:
             logging.debug("Last action failed or not completed, lets try to do something now!")
             # print(f"Yesterday action {yesterday} for {ID}  was.. - {self.config['piggybank_' + str(ID)][yesterday]}")
             next_action_epoch = yesterday_action_epoch
-            logging.debug("next_action_epoch: %s", next_action_epoch)
         logging.debug("We are returning... %s", next_action_epoch)
         return (next_action_epoch)
 
