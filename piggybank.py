@@ -32,7 +32,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
-VERSION = '0.7'
+VERSION = '0.8'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
