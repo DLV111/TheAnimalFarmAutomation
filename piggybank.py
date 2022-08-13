@@ -31,7 +31,7 @@ BUSD_TOKEN_ADDRESS = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 AFP_BUSD_PAIR_ADDRESS = "%s_%s" % (AFP_TOKEN_ADDRESS, BUSD_TOKEN_ADDRESS)
 
 PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
-VERSION = '0.7'
+VERSION = '0.8'
 
 class PiggyBank:
     def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
@@ -232,7 +232,7 @@ class PiggyBank:
         Then passes the action to the function to perform the task
         """
         logging.info("Working out if I feed or claim or sleep...")
-        _farmerSleepTime = 86400 # Max of 1 day, but may be reduced as soon as this is run
+        _farmerSleepTime = 86400 # Will be updated as soon as it hits the below
         _nextFeedTime = ""
         for key,item in pbinfo.items():
             nextFeed = (pbinfo[key]['timeToNextFeeding'])
@@ -250,11 +250,14 @@ class PiggyBank:
                     logging.info(_msg)
                     self.feedOrClaim(key)
             else:
-                if nextFeed < _farmerSleepTime:
+                if nextFeed < _farmerSleepTime or _nextFeedTime == "":
                     _farmerSleepTime = nextFeed
                     _nextFeedTime = pbinfo[key]['nextFeeding']
                     self.nextPiggyBankFeedID = key
 
+        if _nextFeedTime == "":
+            logging.info("_nextFeedTime isn't set - We will sleep for 60s while we wait for the contract to update")
+            return(60)
         _farmerSleepTime = floor(_nextFeedTime-time.time())
         if _farmerSleepTime <= 0:
             _farmerSleepTime = 0
