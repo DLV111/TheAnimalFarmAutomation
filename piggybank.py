@@ -256,10 +256,8 @@ class PiggyBank:
                     self.nextPiggyBankFeedID = key
 
         if _nextFeedTime == "":
-            logging.error("ERROR: next feed time is: %s - %s", _nextFeedTime, time.time())
-            logging.error("ERROR: Something went wrong, and the _nextFeedTime isn't set - We will sleep for 5 mins and try again")
-            logging.error("ERROR: Please report this error if you wish to help troubleshoot it")
-            return(300)
+            logging.info("_nextFeedTime isn't set - We will sleep for 60s while we wait for the contract to update")
+            return(60)
         _farmerSleepTime = floor(_nextFeedTime-time.time())
         if _farmerSleepTime <= 0:
             _farmerSleepTime = 0
