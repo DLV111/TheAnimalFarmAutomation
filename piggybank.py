@@ -34,7 +34,7 @@ PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
 VERSION = '0.8'
 
 class PiggyBank:
-    def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
+    def __init__(self, txn_timeout=120, gas_price=1.3, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
 
         self.config_args = self.argparser()
         self.config_file = self.config_args['config_file']
