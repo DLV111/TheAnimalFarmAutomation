@@ -59,8 +59,18 @@ class PiggyBank:
             to_checksum(PIGGYBANK_CONTRACT_ADDR),
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
-        gas = tx.estimateGas({'from':self.address,'value':value})  #*gas_fee
-        logger.info(gas)
+        tx = self.piggy_contract.functions.approve(self.address,0).buildTransaction({
+            'nonce': self.w3.eth.getTransactionCount(self.address),
+            'from':self.account,
+            'gasPrice': self.w3.toWei('5', 'gwei'),
+            'gas': '0'
+        })
+
+        gas = self.w3.estimate_gas(tx)
+
+        logging.info(estimate_gas)
+        exit(0)
+
 
         # self.piggybankCount = 1#self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
@@ -281,7 +291,6 @@ class PiggyBank:
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
         remaining_retries = max_tries
         txn_receipt = None
-        logging.info(gas)
         if action == "claim":
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
                 {"gasPrice": eth2wei(self.gas_price, "gwei"),
@@ -294,6 +303,9 @@ class PiggyBank:
                 {"gasPrice": eth2wei(self.gas_price, "gwei"),
                 "from": self.address,
                 "gas": 173344,
+                'maxFeePerGas': maxFeePerGas,
+                'maxPriorityFeePerGas': maxPriorityFeePerGas,
+                'gas': int(gas * 1.1),
                 "nonce": self.w3.eth.getTransactionCount(self.address)
             })
 
