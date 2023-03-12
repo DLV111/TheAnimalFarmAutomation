@@ -59,6 +59,9 @@ class PiggyBank:
             to_checksum(PIGGYBANK_CONTRACT_ADDR),
             abi=read_json_file(PIGGYBANK_ABI_FILE))
 
+        gas = tx.estimateGas({'from':self.address,'value':value})  #*gas_fee
+        logger.info(gas)
+
         # self.piggybankCount = 1#self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         self.piggybankCount = self.piggy_contract.functions.myPiggyBankCount(self.address).call()
         logging.info("You have %s piggy banks" % self.piggybankCount)
@@ -264,7 +267,7 @@ class PiggyBank:
         logging.info("I will sleep for %s - Next action(%s) for piggybank %s is at %s" % (_farmerSleepTime, pbinfo[self.nextPiggyBankFeedID]['nextAction'], self.nextPiggyBankFeedID, getLocalTime(_nextFeedTime)))
         return(_farmerSleepTime)
 
-    def feedOrClaim(self,ID:int,action:str="compound"):
+    def feedOrClaim(self,ID:int,action:str="compound",value:int=0):
         """
         Performs the contract call
 
@@ -278,6 +281,7 @@ class PiggyBank:
         default_sleep_between_actions=30  # This ensures enough time for the network to settle and provide accurate results.
         remaining_retries = max_tries
         txn_receipt = None
+        logging.info(gas)
         if action == "claim":
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
                 {"gasPrice": eth2wei(self.gas_price, "gwei"),
