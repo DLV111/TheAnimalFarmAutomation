@@ -280,16 +280,16 @@ class PiggyBank:
         txn_receipt = None
         if action == "claim":
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
-                {"gasPrice": eth2wei(self.pb_claim_gas, "gwei"),
+                {"gasPrice": self.pb_claim_gasPrice,
                 "from": self.address,
-                "gas": 571431,
+                "gas": pb_claim_gas,
                 "nonce": self.w3.eth.getTransactionCount(self.address)
             })
         else:
             tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
-                {"gasPrice": eth2wei(self.pb_compound_gas, "gwei"),
+                {"gasPrice": self.pb_compound_gasPrice,
                 "from": self.address,
-                "gas": 173344,
+                "gas": self.pb_compound_gas,
                 "nonce": self.w3.eth.getTransactionCount(self.address)
             })
 
@@ -357,8 +357,14 @@ class PiggyBank:
         if self.pb_claim_gas == "":
             logging.info("pb_claim_gas is not set")
             sys.exit(1)
+        if self.pb_claim_gasPrice == "":
+            logging.info("pb_claim_gasPrice is not set")
+            sys.exit(1)
         if self.pb_compound_gas == "":
             logging.info("pb_compound_gas is not set")
+            sys.exit(1)
+        if self.pb_compound_gasPrice == "":
+            logging.info("pb_compound_gasPrice is not set")
             sys.exit(1)
         if self.max_tries == "":
             logging.info("max_tries is not set")
@@ -402,10 +408,16 @@ class PiggyBank:
                 if not config.has_option('piggybank','pb_claim_gas'):
                     logging.info("˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅")
                     logging.info("Please manually add options to the section [piggybank] to your config file")
-                    logging.info("pb_claim_gas = 5  # Default GWEI for claiming")
-                    logging.info("pb_compound_gas = 1.3  # Default GWEI for compounding")
+                    logging.info("You can view the raw trasactions to get an idea for price")
+                    logging.info("If someone knows how to find this our programatically then let me know!")
+                    logging.info("pb_claim_gasPrice = 0x12a05f200  # Default gas price for claiming(5000000000) - 5GWEI")
+                    logging.info("pb_claim_gas = 0x49fe0  # Default gas for claiming(303072)")
+                    logging.info("pb_compound_gasPrice = 0x12a05f200  # Default gas price for claiming(5000000000) - 5GWEI")
+                    logging.info("pb_compound_gas = 0x1666c8  # Default gas for compounding (1468104)")
                     logging.info("^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^")
+                self.pb_claim_gasPrice = config['piggybank']['pb_claim_gasPrice']
                 self.pb_claim_gas = config['piggybank']['pb_claim_gas']
+                self.pb_compound_gasPrice = config['piggybank']['pb_compound_gasPrice']
                 self.pb_compound_gas = config['piggybank']['pb_compound_gas']
                 return config
             except:
