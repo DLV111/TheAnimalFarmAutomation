@@ -34,7 +34,7 @@ PIGGYBANK_ABI_FILE = "./abis/piggybankv1.json"
 VERSION = '0.8'
 
 class PiggyBank:
-    def __init__(self, txn_timeout=120, gas_price=1.3, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
+    def __init__(self, txn_timeout=120, gas_price=5, rpc_host="https://bsc-dataseed.binance.org:443",rounding=3, **kwargs):
 
         self.config_args = self.argparser()
         self.config_file = self.config_args['config_file']
@@ -44,7 +44,7 @@ class PiggyBank:
         logging.info('"%s" wallet selected for processing' % self.wallet_friendly_name)
         self.rounding = rounding
         self.txn_timeout = txn_timeout
-        self.gas_price = gas_price
+        self.gas_price = gas_price  # Unused now we define it via config
         self.rpc_host = rpc_host
 
         # Init the pushover client if defined
@@ -280,14 +280,14 @@ class PiggyBank:
         txn_receipt = None
         if action == "claim":
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
-                {"gasPrice": eth2wei(self.gas_price, "gwei"),
+                {"gasPrice": eth2wei(self.pb_claim_gas, "gwei"),
                 "from": self.address,
                 "gas": 571431,
                 "nonce": self.w3.eth.getTransactionCount(self.address)
             })
         else:
             tx = self.piggy_contract.functions.feedPiglets(ID).buildTransaction(
-                {"gasPrice": eth2wei(self.gas_price, "gwei"),
+                {"gasPrice": eth2wei(self.pb_compound_gas, "gwei"),
                 "from": self.address,
                 "gas": 173344,
                 "nonce": self.w3.eth.getTransactionCount(self.address)
@@ -354,6 +354,12 @@ class PiggyBank:
         if self.perform_piggybank_actions == "":
             logging.info("perform_piggybank_actions is not set")
             sys.exit(1)
+        if self.pb_claim_gas == "":
+            logging.info("pb_claim_gas is not set")
+            sys.exit(1)
+        if self.pb_compound_gas == "":
+            logging.info("pb_compound_gas is not set")
+            sys.exit(1)
         if self.max_tries == "":
             logging.info("max_tries is not set")
             sys.exit(1)
@@ -393,6 +399,14 @@ class PiggyBank:
                 self.max_tries = int(config['piggybank']['max_tries'])
                 self.max_tries_delay = int(config['piggybank']['max_tries_delay'])
                 self.min_bnb_balance = config['piggybank']['min_bnb_balance']
+                if not config.has_option('piggybank','pb_claim_gas'):
+                    logging.info("˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅ ˅")
+                    logging.info("Please manually add options to the section [piggybank] to your config file")
+                    logging.info("pb_claim_gas = 5  # Default GWEI for claiming")
+                    logging.info("pb_compound_gas = 1.3  # Default GWEI for compounding")
+                    logging.info("^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^")
+                self.pb_claim_gas = config['piggybank']['pb_claim_gas']
+                self.pb_compound_gas = config['piggybank']['pb_compound_gas']
                 return config
             except:
                 logging.info('There was an error opening the config file %s' % config_file)
