@@ -282,7 +282,7 @@ class PiggyBank:
             tx = self.piggy_contract.functions.sellTruffles(ID).buildTransaction(
                 {"gasPrice": self.pb_claim_gasPrice,
                 "from": self.address,
-                "gas": pb_claim_gas,
+                "gas": self.pb_claim_gas,
                 "nonce": self.w3.eth.getTransactionCount(self.address)
             })
         else:
